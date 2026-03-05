@@ -16,6 +16,8 @@ dist-ssr
 backend/.venv
 backend/.pytest_cache
 backend/__pycache__
+__pycache__/
+*.py[cod]
 backend/.ruff_cache
 
 # Editor directories and files
