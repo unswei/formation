@@ -1,0 +1,35 @@
+{
+  "S": {
+    "length": 9,
+    "width": 6,
+    "goalAreaLength": 1,
+    "goalAreaWidth": 3,
+    "penaltyAreaLength": 2,
+    "penaltyAreaWidth": 4,
+    "penaltyMarkDistance": 1.5,
+    "centreCircleDiameter": 1.5,
+    "cornerArcRadius": 0
+  },
+  "M": {
+    "length": 14,
+    "width": 9,
+    "goalAreaLength": 1,
+    "goalAreaWidth": 4,
+    "penaltyAreaLength": 3,
+    "penaltyAreaWidth": 6,
+    "penaltyMarkDistance": 2,
+    "centreCircleDiameter": 3,
+    "cornerArcRadius": 0.5
+  },
+  "L": {
+    "length": 22,
+    "width": 14,
+    "goalAreaLength": 1,
+    "goalAreaWidth": 5,
+    "penaltyAreaLength": 3.5,
+    "penaltyAreaWidth": 7,
+    "penaltyMarkDistance": 2.5,
+    "centreCircleDiameter": 4,
+    "cornerArcRadius": 1
+  }
+}

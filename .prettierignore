@@ -1,0 +1,4 @@
+backend/.venv
+coverage
+dist
+node_modules
