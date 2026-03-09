@@ -56,7 +56,7 @@ export function Controls({
   return (
     <aside className="panel">
       <div className="panel__section">
-        <h1 className="panel__title">Soccer field formation visualiser</h1>
+        <h1 className="panel__title">rUNSWift formation</h1>
         <p className="panel__copy">
           Load a formation JSON file, choose the play mode, then place the ball
           to see the backend-computed robot layout.
