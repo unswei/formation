@@ -52,3 +52,36 @@ player. Missing limits are treated as unbounded.
 ```bash
 python -m unittest discover player_template
 ```
+
+## Player-Facing Game State Machine
+
+`player_state_machine.py` contains a pure Python skeleton for tracking the
+observable GameController state from consecutive player-facing packets.
+
+```python
+from player_state_machine import PlayerGameSnapshot, PlayerGameStateMachine
+
+machine = PlayerGameStateMachine()
+transition = machine.update(
+    PlayerGameSnapshot(
+        game_phase="normal",
+        state="ready",
+        set_play="none",
+        kicking_team=7,
+        own_team_number=7,
+        first_half=True,
+        stopped=False,
+        packet_number=42,
+    )
+)
+
+print(transition.current.kicking_relation.value)  # "us"
+print(transition.current.exact_formation_key)
+print([event.value for event in transition.events])
+```
+
+This is intentionally a player-perspective state machine. It models fields that
+robots receive: `gamePhase`, `state`, `setPlay`, `kickingTeam`, `firstHalf`, and
+`stopped`. It cannot reconstruct every internal referee action because the
+GameController may delay advertised transitions to `playing`, and kick-off is
+advertised as `setPlay="none"` plus a non-empty `kickingTeam`.
