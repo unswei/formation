@@ -45,23 +45,59 @@ The formation file is JSON with a small top-level structure:
 - Each mode contains a `robots` object keyed by robot ID as strings: `"1"` to `"11"`.
 - Each robot needs an `offset` with `x` and `y`.
 
-## Supported play modes
+## Supported formation modes
 
-These are the mode names the frontend understands:
+These are the canonical mode names the backend can select after it resolves the
+advertised GameController fields:
 
 - `normal_play`
 - `kickoff_us`
 - `kickoff_them`
+- `direct_free_kick_us`
+- `direct_free_kick_them`
+- `indirect_free_kick_us`
+- `indirect_free_kick_them`
+- `throw_in_us`
+- `throw_in_them`
 - `goal_kick_us`
 - `goal_kick_them`
-- `corner_us`
-- `corner_them`
-- `penalty_us`
-- `penalty_them`
+- `corner_kick_us`
+- `corner_kick_them`
+- `penalty_kick_us`
+- `penalty_kick_them`
+- `timeout`
+
+Legacy aliases are still accepted and normalised:
+
+- `corner_us` -> `corner_kick_us`
+- `corner_them` -> `corner_kick_them`
+- `penalty_us` -> `penalty_kick_us`
+- `penalty_them` -> `penalty_kick_them`
 
 If a requested mode is missing, the backend falls back to `normal_play`.
 
 Unknown mode names in the JSON are ignored with a warning.
+
+## How the demonstrator resolves GameController fields
+
+The UI no longer asks for a synthetic play mode. Instead it takes the same
+robot-facing fields the GameController advertises and derives the formation mode
+from them.
+
+In broad terms:
+
+- the backend first looks for an exact mode key of the form
+  `advertised__phase_<phase>__state_<state>__set_play_<set_play>__kicking_<none|us|them>`
+- `gamePhase = timeout` selects `timeout`
+- `gamePhase = penalty_shoot_out` selects `penalty_kick_us` or `penalty_kick_them`
+- `setPlay != none` selects the matching set-play mode, using `kickingTeam` to
+  decide `us` versus `them`
+- `setPlay = none` with a non-`playing` state selects `kickoff_us` or
+  `kickoff_them`
+- otherwise the tool selects `normal_play`
+
+If the exact advertised-state key is absent, the backend falls back to the
+legacy semantic mode names above, then to `normal_play`.
 
 ## How positions are worked out in v0
 

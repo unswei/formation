@@ -1,11 +1,18 @@
 import type { FormationConfig } from '../config/schema'
 import type { FieldSize } from '../geom/field'
-import type { PlayMode, RobotId, Vec2 } from '../types'
+import type {
+  AdvertisedGameControllerState,
+  FormationMode,
+  RobotId,
+  Vec2,
+} from '../types'
 
 export type ComputePositionsRequest = {
   version: 1
   field: FieldSize
-  playMode: PlayMode
+  gameControllerState: AdvertisedGameControllerState
+  advertisedStateMode: string
+  legacyMode: FormationMode
   ball: Vec2
   robotIds: RobotId[]
   activePlayers: number

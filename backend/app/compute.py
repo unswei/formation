@@ -1,24 +1,71 @@
 from __future__ import annotations
 
 from math import inf, isfinite
-from typing import Any
+from typing import Any, Literal, TypedDict
 
-VALID_PLAY_MODES = {
+FormationMode = Literal[
     "normal_play",
     "kickoff_us",
     "kickoff_them",
+    "direct_free_kick_us",
+    "direct_free_kick_them",
+    "indirect_free_kick_us",
+    "indirect_free_kick_them",
+    "throw_in_us",
+    "throw_in_them",
     "goal_kick_us",
     "goal_kick_them",
-    "corner_us",
-    "corner_them",
-    "penalty_us",
-    "penalty_them",
+    "corner_kick_us",
+    "corner_kick_them",
+    "penalty_kick_us",
+    "penalty_kick_them",
+    "timeout",
+]
+
+LEGACY_FORMATION_MODE_ALIASES: dict[str, FormationMode] = {
+    "corner_us": "corner_kick_us",
+    "corner_them": "corner_kick_them",
+    "penalty_us": "penalty_kick_us",
+    "penalty_them": "penalty_kick_them",
 }
+
+VALID_FORMATION_MODES: set[str] = {
+    "normal_play",
+    "kickoff_us",
+    "kickoff_them",
+    "direct_free_kick_us",
+    "direct_free_kick_them",
+    "indirect_free_kick_us",
+    "indirect_free_kick_them",
+    "throw_in_us",
+    "throw_in_them",
+    "goal_kick_us",
+    "goal_kick_them",
+    "corner_kick_us",
+    "corner_kick_them",
+    "penalty_kick_us",
+    "penalty_kick_them",
+    "timeout",
+}
+
+TeamPerspective = Literal["us", "them", "unknown"]
+
+
+class AdvertisedGameControllerState(TypedDict):
+    gamePhase: str
+    state: str
+    setPlay: str
+    firstHalf: bool
+    stopped: bool
+    ownTeamNumber: int
+    kickingTeam: int | None
 
 
 def compute_positions(
     *,
-    play_mode: str,
+    game_controller_state: AdvertisedGameControllerState,
+    advertised_state_mode: str,
+    legacy_mode: str,
     ball: dict[str, float],
     robot_ids: list[int],
     active_players: int,
@@ -28,8 +75,9 @@ def compute_positions(
     resolved_robot_ids = resolve_robot_ids(robot_ids, active_players, warnings)
     resolved_mode, resolved_mode_name = resolve_mode_config(
         formation,
-        play_mode,
-        warnings,
+        advertised_state_mode=advertised_state_mode,
+        legacy_mode=legacy_mode,
+        warnings=warnings,
     )
 
     positions: dict[str, dict[str, Any]] = {}
@@ -68,9 +116,88 @@ def resolve_robot_ids(
     return sorted(resolved)
 
 
+def resolve_formation_mode(
+    game_controller_state: AdvertisedGameControllerState,
+) -> tuple[str, FormationMode]:
+    game_phase = game_controller_state["gamePhase"]
+    state = game_controller_state["state"]
+    set_play = game_controller_state["setPlay"]
+    perspective = resolve_team_perspective(game_controller_state)
+
+    if game_phase == "timeout":
+        return (
+            build_advertised_state_mode(game_controller_state, perspective),
+            "timeout",
+        )
+
+    if game_phase == "penalty_shoot_out":
+        return (
+            build_advertised_state_mode(game_controller_state, perspective),
+            "penalty_kick_them" if perspective == "them" else "penalty_kick_us",
+        )
+
+    set_play_mode = resolve_set_play_mode(set_play, perspective)
+    if set_play_mode is not None:
+        return (
+            build_advertised_state_mode(game_controller_state, perspective),
+            set_play_mode,
+        )
+
+    if set_play == "none" and state != "playing" and perspective != "unknown":
+        return (
+            build_advertised_state_mode(game_controller_state, perspective),
+            "kickoff_us" if perspective == "us" else "kickoff_them",
+        )
+
+    return (
+        build_advertised_state_mode(game_controller_state, perspective),
+        "normal_play",
+    )
+
+
+def resolve_team_perspective(
+    game_controller_state: AdvertisedGameControllerState,
+) -> TeamPerspective:
+    kicking_team = game_controller_state["kickingTeam"]
+    if kicking_team is None:
+        return "unknown"
+
+    return (
+        "us"
+        if kicking_team == game_controller_state["ownTeamNumber"]
+        else "them"
+    )
+
+
+def resolve_set_play_mode(
+    set_play: str, perspective: TeamPerspective
+) -> FormationMode | None:
+    if set_play == "none" or perspective == "unknown":
+        return None
+
+    suffix = "us" if perspective == "us" else "them"
+
+    if set_play == "direct_free_kick":
+        return f"direct_free_kick_{suffix}"
+    if set_play == "indirect_free_kick":
+        return f"indirect_free_kick_{suffix}"
+    if set_play == "penalty_kick":
+        return f"penalty_kick_{suffix}"
+    if set_play == "throw_in":
+        return f"throw_in_{suffix}"
+    if set_play == "goal_kick":
+        return f"goal_kick_{suffix}"
+    if set_play == "corner_kick":
+        return f"corner_kick_{suffix}"
+
+    return None
+
+
 def resolve_mode_config(
     formation: dict[str, Any],
-    play_mode: str,
+    *,
+    advertised_state_mode: str,
+    legacy_mode: str,
     warnings: list[str],
 ) -> tuple[dict[str, Any] | None, str]:
     modes = read_dict(formation.get("modes"))
@@ -79,22 +206,47 @@ def resolve_mode_config(
         warnings.append('Formation config is missing "modes"; every robot is unknown.')
         return None, "normal_play"
 
-    requested_mode = read_dict(modes.get(play_mode))
+    requested_mode = read_dict(modes.get(advertised_state_mode))
     if requested_mode is not None:
-        return requested_mode, play_mode
+        return requested_mode, advertised_state_mode
 
-    if play_mode not in VALID_PLAY_MODES:
-        warnings.append(f'Play mode "{play_mode}" is not recognised.')
+    requested_mode = read_dict(modes.get(legacy_mode))
+    if requested_mode is not None:
+        return requested_mode, legacy_mode
+
+    legacy_alias = LEGACY_FORMATION_MODE_ALIASES.get(legacy_mode)
+    if legacy_alias is not None:
+        legacy_mode = read_dict(modes.get(legacy_alias))
+        if legacy_mode is not None:
+            return legacy_mode, legacy_alias
+
+    if legacy_mode not in VALID_FORMATION_MODES:
+        warnings.append(f'Play mode "{legacy_mode}" is not recognised.')
 
     fallback_mode = read_dict(modes.get("normal_play"))
     if fallback_mode is not None:
-        if play_mode != "normal_play":
+        if legacy_mode != "normal_play":
             warnings.append(
-                f'Play mode "{play_mode}" is missing; falling back to "normal_play".'
+                f'Modes "{advertised_state_mode}" and "{legacy_mode}" are missing; falling back to "normal_play".'
             )
         return fallback_mode, "normal_play"
 
-    return None, play_mode
+    return None, advertised_state_mode
+
+
+def build_advertised_state_mode(
+    game_controller_state: AdvertisedGameControllerState,
+    perspective: TeamPerspective,
+) -> str:
+    return "__".join(
+        [
+            "advertised",
+            f'phase_{game_controller_state["gamePhase"]}',
+            f'state_{game_controller_state["state"]}',
+            f'set_play_{game_controller_state["setPlay"]}',
+            f"kicking_{perspective}",
+        ]
+    )
 
 
 def compute_robot_position(

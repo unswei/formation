@@ -22,10 +22,30 @@ class Vec2Model(BaseModel):
         return value
 
 
+class AdvertisedGameControllerStateModel(BaseModel):
+    gamePhase: Literal["normal", "penalty_shoot_out", "extra_time", "timeout"]
+    state: Literal["initial", "ready", "set", "playing", "finished"]
+    setPlay: Literal[
+        "none",
+        "direct_free_kick",
+        "indirect_free_kick",
+        "penalty_kick",
+        "throw_in",
+        "goal_kick",
+        "corner_kick",
+    ]
+    firstHalf: bool
+    stopped: bool
+    ownTeamNumber: int = Field(ge=0, le=254)
+    kickingTeam: int | None = Field(default=None, ge=0, le=254)
+
+
 class ComputePositionsRequest(BaseModel):
     version: Literal[1]
     field: str
-    playMode: str
+    gameControllerState: AdvertisedGameControllerStateModel
+    advertisedStateMode: str = Field(min_length=1)
+    legacyMode: str = Field(min_length=1)
     ball: Vec2Model
     robotIds: list[int] = Field(default_factory=list)
     activePlayers: int = Field(ge=0, le=11)
@@ -67,7 +87,9 @@ def post_compute_positions(
     request: ComputePositionsRequest,
 ) -> ComputePositionsResponse:
     positions, warnings = compute_positions(
-        play_mode=request.playMode,
+        game_controller_state=request.gameControllerState.model_dump(),
+        advertised_state_mode=request.advertisedStateMode,
+        legacy_mode=request.legacyMode,
         ball=request.ball.model_dump(),
         robot_ids=request.robotIds,
         active_players=request.activePlayers,

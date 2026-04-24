@@ -3,6 +3,10 @@
 Small React/Vite frontend plus a FastAPI backend for visualising RoboCup-style
 soccer formations from a bird's-eye view.
 
+The tool now selects formation modes from the same GameController-advertised
+fields a player receives: `gamePhase`, `state`, `setPlay`, `kickingTeam`,
+`firstHalf`, and `stopped`.
+
 ## Stack
 
 - React 19 + Vite + TypeScript

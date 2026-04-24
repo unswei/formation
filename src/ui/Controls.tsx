@@ -1,8 +1,23 @@
 import type { ChangeEvent } from 'react'
 
 import type { FieldSize } from '../geom/field'
-import { PLAY_MODE_LABELS, PLAY_MODE_OPTIONS } from '../types'
-import type { PlayMode, Vec2 } from '../types'
+import {
+  FORMATION_MODE_LABELS,
+  GAME_PHASE_LABELS,
+  GAME_PHASE_OPTIONS,
+  GAME_STATE_LABELS,
+  GAME_STATE_OPTIONS,
+  KICKING_TEAM_RELATION_LABELS,
+  KICKING_TEAM_RELATION_OPTIONS,
+  SET_PLAY_LABELS,
+  SET_PLAY_OPTIONS,
+} from '../types'
+import type {
+  AdvertisedGameControllerState,
+  FormationMode,
+  KickingTeamRelation,
+  Vec2,
+} from '../types'
 
 type LoadedConfigInfo = {
   fileName: string
@@ -13,7 +28,10 @@ type LoadedConfigInfo = {
 type ControlsProps = {
   fieldOptions: FieldSize[]
   field: FieldSize
-  playMode: PlayMode
+  gameControllerState: AdvertisedGameControllerState
+  resolvedAdvertisedStateMode: string
+  resolvedLegacyMode: FormationMode
+  kickingTeamRelation: KickingTeamRelation
   robotCount: number
   ball: Vec2
   minBallX: number
@@ -24,7 +42,9 @@ type ControlsProps = {
   configError: string | null
   showPlayerIds: boolean
   onFieldChange: (field: FieldSize) => void
-  onPlayModeChange: (playMode: PlayMode) => void
+  onGameControllerStateChange: (
+    state: AdvertisedGameControllerState,
+  ) => void
   onRobotCountChange: (robotCount: number) => void
   onBallAxisChange: (axis: keyof Vec2, value: number) => void
   onConfigFileSelected: (file: File | null) => void
@@ -35,7 +55,10 @@ type ControlsProps = {
 export function Controls({
   fieldOptions,
   field,
-  playMode,
+  gameControllerState,
+  resolvedAdvertisedStateMode,
+  resolvedLegacyMode,
+  kickingTeamRelation,
   robotCount,
   ball,
   minBallX,
@@ -46,7 +69,7 @@ export function Controls({
   configError,
   showPlayerIds,
   onFieldChange,
-  onPlayModeChange,
+  onGameControllerStateChange,
   onRobotCountChange,
   onBallAxisChange,
   onConfigFileSelected,
@@ -58,8 +81,9 @@ export function Controls({
       <div className="panel__section">
         <h1 className="panel__title">rUNSWift formation</h1>
         <p className="panel__copy">
-          Load a formation JSON file, choose the play mode, then place the ball
-          to see the backend-computed robot layout.
+          Load a formation JSON file, enter the GameController fields a player
+          actually receives, then place the ball to see the computed robot
+          layout.
         </p>
       </div>
 
@@ -92,20 +116,157 @@ export function Controls({
           </select>
         </label>
 
+        <div className="status-card">
+          <p>
+            <strong>Resolved advertised-state mode:</strong>{' '}
+            {resolvedAdvertisedStateMode}
+          </p>
+          <p>
+            <strong>Legacy fallback mode:</strong>{' '}
+            {FORMATION_MODE_LABELS[resolvedLegacyMode]}
+          </p>
+          <p>
+            <strong>Kicking team relation:</strong>{' '}
+            {KICKING_TEAM_RELATION_LABELS[kickingTeamRelation]}
+          </p>
+        </div>
+      </div>
+
+      <div className="panel__section">
+        <h2 className="panel__section-title">Advertised Game State</h2>
+
         <label className="control">
-          <span className="control__label">Play mode</span>
+          <span className="control__label">Game phase</span>
           <select
-            value={playMode}
+            value={gameControllerState.gamePhase}
             onChange={(event) =>
-              onPlayModeChange(event.target.value as PlayMode)
+              onGameControllerStateChange({
+                ...gameControllerState,
+                gamePhase: event.target.value as AdvertisedGameControllerState['gamePhase'],
+              })
             }
           >
-            {PLAY_MODE_OPTIONS.map((option) => (
+            {GAME_PHASE_OPTIONS.map((option) => (
               <option key={option} value={option}>
-                {PLAY_MODE_LABELS[option]}
+                {GAME_PHASE_LABELS[option]}
               </option>
             ))}
           </select>
+        </label>
+
+        <label className="control">
+          <span className="control__label">State</span>
+          <select
+            value={gameControllerState.state}
+            onChange={(event) =>
+              onGameControllerStateChange({
+                ...gameControllerState,
+                state: event.target.value as AdvertisedGameControllerState['state'],
+              })
+            }
+          >
+            {GAME_STATE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {GAME_STATE_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="control">
+          <span className="control__label">Set play</span>
+          <select
+            value={gameControllerState.setPlay}
+            onChange={(event) =>
+              onGameControllerStateChange({
+                ...gameControllerState,
+                setPlay: event.target.value as AdvertisedGameControllerState['setPlay'],
+              })
+            }
+          >
+            {SET_PLAY_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {SET_PLAY_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="control">
+          <span className="control__label">Own team number</span>
+          <input
+            type="number"
+            min={0}
+            max={254}
+            step={1}
+            value={gameControllerState.ownTeamNumber}
+            onChange={(event) => {
+              const nextValue = parseIntegerInput(event.target.value)
+              if (nextValue !== undefined) {
+                const currentRelation = kickingTeamRelation
+                onGameControllerStateChange({
+                  ...gameControllerState,
+                  ownTeamNumber: nextValue,
+                  kickingTeam: resolveKickingTeamFromRelation(
+                    nextValue,
+                    currentRelation,
+                  ),
+                })
+              }
+            }}
+          />
+        </label>
+
+        <label className="control">
+          <span className="control__label">Kicking team</span>
+          <select
+            value={kickingTeamRelation}
+            onChange={(event) => {
+              const nextRelation =
+                event.target.value as KickingTeamRelation
+              onGameControllerStateChange({
+                ...gameControllerState,
+                kickingTeam: resolveKickingTeamFromRelation(
+                  gameControllerState.ownTeamNumber,
+                  nextRelation,
+                ),
+              })
+            }}
+          >
+            {KICKING_TEAM_RELATION_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {KICKING_TEAM_RELATION_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={gameControllerState.firstHalf}
+            onChange={(event) =>
+              onGameControllerStateChange({
+                ...gameControllerState,
+                firstHalf: event.target.checked,
+              })
+            }
+          />
+          <span>First half</span>
+        </label>
+
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={gameControllerState.stopped}
+            onChange={(event) =>
+              onGameControllerStateChange({
+                ...gameControllerState,
+                stopped: event.target.checked,
+              })
+            }
+          />
+          <span>Stopped</span>
         </label>
       </div>
 
@@ -216,6 +377,30 @@ export function Controls({
       </div>
     </aside>
   )
+}
+
+function parseIntegerInput(value: string): number | undefined {
+  const parsedValue = Number(value)
+
+  if (Number.isInteger(parsedValue) && parsedValue >= 0 && parsedValue <= 254) {
+    return parsedValue
+  }
+
+  return undefined
+}
+
+function resolveKickingTeamFromRelation(
+  ownTeamNumber: number,
+  relation: KickingTeamRelation,
+): number | null {
+  switch (relation) {
+    case 'none':
+      return null
+    case 'us':
+      return ownTeamNumber
+    case 'them':
+      return ownTeamNumber === 254 ? 0 : ownTeamNumber + 1
+  }
 }
 
 function handleBallInputChange(

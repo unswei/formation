@@ -1,5 +1,8 @@
-import { PLAY_MODE_OPTIONS } from '../types'
-import type { PlayMode } from '../types'
+import {
+  FORMATION_MODE_OPTIONS,
+  LEGACY_FORMATION_MODE_ALIASES,
+} from '../types'
+import type { FormationMode, LegacyFormationMode } from '../types'
 
 export type FormationConfig = {
   version: 1
@@ -8,7 +11,7 @@ export type FormationConfig = {
     attraction?: { x?: number; y?: number }
     minX?: number
   }
-  modes: Partial<Record<PlayMode, ModeConfig>>
+  modes: Record<string, ModeConfig>
 }
 
 export type ModeConfig = {
@@ -32,7 +35,9 @@ export type ParsedFormationConfig = {
   warnings: string[]
 }
 
-const PLAY_MODE_SET = new Set<string>(PLAY_MODE_OPTIONS)
+const FORMATION_MODE_SET = new Set<string>(FORMATION_MODE_OPTIONS)
+const ADVERTISED_STATE_MODE_PATTERN =
+  /^advertised__phase_[a-z_]+__state_[a-z_]+__set_play_[a-z_]+__kicking_(?:none|us|them)$/
 
 export function parseFormationConfig(
   input: string,
@@ -79,9 +84,10 @@ export function parseFormationConfig(
     config.defaults = defaults
   }
 
-  for (const [modeKey, modeValue] of Object.entries(modesValue)) {
-    if (!isPlayMode(modeKey)) {
-      warnings.push(`Ignoring unknown play mode "${modeKey}".`)
+  for (const [rawModeKey, modeValue] of Object.entries(modesValue)) {
+    const modeKey = normaliseFormationMode(rawModeKey, warnings)
+    if (!modeKey) {
+      warnings.push(`Ignoring unknown play mode "${rawModeKey}".`)
       continue
     }
 
@@ -291,6 +297,37 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function isPlayMode(value: string): value is PlayMode {
-  return PLAY_MODE_SET.has(value)
+function normaliseFormationMode(
+  value: string,
+  warnings: string[],
+): string | undefined {
+  if (isAdvertisedStateMode(value)) {
+    return value
+  }
+
+  if (isFormationMode(value)) {
+    return value
+  }
+
+  if (isLegacyFormationMode(value)) {
+    const canonicalMode = LEGACY_FORMATION_MODE_ALIASES[value]
+    warnings.push(
+      `Normalising legacy play mode "${value}" to "${canonicalMode}".`,
+    )
+    return canonicalMode
+  }
+
+  return undefined
+}
+
+function isFormationMode(value: string): value is FormationMode {
+  return FORMATION_MODE_SET.has(value)
+}
+
+function isLegacyFormationMode(value: string): value is LegacyFormationMode {
+  return value in LEGACY_FORMATION_MODE_ALIASES
+}
+
+function isAdvertisedStateMode(value: string): boolean {
+  return ADVERTISED_STATE_MODE_PATTERN.test(value)
 }

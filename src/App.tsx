@@ -5,6 +5,7 @@ import { computePositions } from './api/client'
 import type { ComputePositionsResponse, PositionResponse } from './api/client'
 import { parseFormationConfig } from './config/schema'
 import type { FormationConfig } from './config/schema'
+import { resolveMode } from './gameController'
 import {
   FIELD_POSITION_PADDING_METRES,
   FIELD_SIZE_OPTIONS,
@@ -19,8 +20,8 @@ import type { FieldSize } from './geom/field'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { Controls } from './ui/Controls'
 import { FieldView } from './ui/FieldView'
-import { PLAY_MODE_OPTIONS, ROBOT_IDS } from './types'
-import type { PlayMode, RobotId, Vec2 } from './types'
+import { DEFAULT_ADVERTISED_STATE, ROBOT_IDS } from './types'
+import type { AdvertisedGameControllerState, RobotId, Vec2 } from './types'
 
 type LoadedFormationState = {
   config: FormationConfig
@@ -37,7 +38,8 @@ const DEFAULT_FIELD =
 
 function App() {
   const [field, setField] = useState<FieldSize>(DEFAULT_FIELD)
-  const [playMode, setPlayMode] = useState<PlayMode>(PLAY_MODE_OPTIONS[0])
+  const [gameControllerState, setGameControllerState] =
+    useState<AdvertisedGameControllerState>(DEFAULT_ADVERTISED_STATE)
   const [robotCount, setRobotCount] = useState(5)
   const [ball, setBall] = useState<Vec2>({ x: 0, y: 0 })
   const [loadedFormation, setLoadedFormation] =
@@ -52,6 +54,7 @@ function App() {
   const fieldBounds = getFieldBounds(dimensions)
   const activeRobotIds = ROBOT_IDS.slice(0, robotCount)
   const debouncedBall = useDebouncedValue(ball, 80)
+  const resolvedMode = resolveMode(gameControllerState)
   const canRenderComputedRobots = loadedFormation !== null && robotCount > 0
   const visiblePositions = canRenderComputedRobots ? positions : {}
   const visibleBackendWarnings = canRenderComputedRobots ? backendWarnings : []
@@ -73,7 +76,9 @@ function App() {
       {
         version: 1,
         field,
-        playMode,
+        gameControllerState,
+        advertisedStateMode: resolvedMode.advertisedStateMode,
+        legacyMode: resolvedMode.legacyMode,
         ball: debouncedBall,
         robotIds: ROBOT_IDS.slice(0, robotCount),
         activePlayers: robotCount,
@@ -113,9 +118,11 @@ function App() {
     debouncedBall,
     dimensions,
     field,
+    gameControllerState,
     loadedFormation,
-    playMode,
     robotCount,
+    resolvedMode.advertisedStateMode,
+    resolvedMode.legacyMode,
   ])
 
   const renderedRobots = activeRobotIds.map((robotId) => {
@@ -177,7 +184,10 @@ function App() {
       <Controls
         fieldOptions={FIELD_SIZE_OPTIONS}
         field={field}
-        playMode={playMode}
+        gameControllerState={gameControllerState}
+        resolvedAdvertisedStateMode={resolvedMode.advertisedStateMode}
+        resolvedLegacyMode={resolvedMode.legacyMode}
+        kickingTeamRelation={resolvedMode.kickingTeamRelation}
         robotCount={robotCount}
         ball={ball}
         minBallX={fieldBounds.minX}
@@ -196,7 +206,7 @@ function App() {
         configError={configError}
         showPlayerIds={showPlayerIds}
         onFieldChange={handleFieldChange}
-        onPlayModeChange={setPlayMode}
+        onGameControllerStateChange={setGameControllerState}
         onRobotCountChange={setRobotCount}
         onBallAxisChange={handleBallAxisChange}
         onConfigFileSelected={handleConfigFileSelected}

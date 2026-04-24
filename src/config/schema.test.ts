@@ -41,4 +41,50 @@ describe('formation config parsing', () => {
       parseFormationConfig(JSON.stringify({ version: 2, modes: {} })),
     ).toThrow('must declare "version": 1')
   })
+
+  it('normalises legacy mode aliases to canonical names', () => {
+    const result = parseFormationConfig(
+      JSON.stringify({
+        version: 1,
+        modes: {
+          penalty_us: {
+            robots: {
+              '1': { offset: { x: 0, y: 0 } },
+            },
+          },
+        },
+      }),
+    )
+
+    expect(result.config.modes.penalty_kick_us?.robots['1']).toEqual({
+      offset: { x: 0, y: 0 },
+    })
+    expect(result.warnings).toContain(
+      'Normalising legacy play mode "penalty_us" to "penalty_kick_us".',
+    )
+  })
+
+  it('accepts exact advertised-state mode keys', () => {
+    const result = parseFormationConfig(
+      JSON.stringify({
+        version: 1,
+        modes: {
+          advertised__phase_normal__state_ready__set_play_none__kicking_none:
+            {
+              robots: {
+                '1': { offset: { x: -1, y: 0 } },
+              },
+            },
+        },
+      }),
+    )
+
+    expect(
+      result.config.modes[
+        'advertised__phase_normal__state_ready__set_play_none__kicking_none'
+      ]?.robots['1'],
+    ).toEqual({
+      offset: { x: -1, y: 0 },
+    })
+  })
 })
