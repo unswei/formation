@@ -87,4 +87,46 @@ describe('formation config parsing', () => {
       offset: { x: -1, y: 0 },
     })
   })
+
+  it('parses min/max axis limits wherever minX is accepted', () => {
+    const result = parseFormationConfig(
+      JSON.stringify({
+        version: 1,
+        defaults: { minX: -4, maxX: 5, minY: -3, maxY: 3 },
+        modes: {
+          normal_play: {
+            defaults: { minX: -3, maxX: 4, minY: -2, maxY: 2 },
+            robots: {
+              '1': {
+                offset: { x: 0, y: 0 },
+                minX: -2,
+                maxX: 3,
+                minY: -1,
+                maxY: 1,
+              },
+            },
+          },
+        },
+      }),
+    )
+
+    expect(result.config.defaults).toMatchObject({
+      minX: -4,
+      maxX: 5,
+      minY: -3,
+      maxY: 3,
+    })
+    expect(result.config.modes.normal_play?.defaults).toMatchObject({
+      minX: -3,
+      maxX: 4,
+      minY: -2,
+      maxY: 2,
+    })
+    expect(result.config.modes.normal_play?.robots['1']).toMatchObject({
+      minX: -2,
+      maxX: 3,
+      minY: -1,
+      maxY: 1,
+    })
+  })
 })

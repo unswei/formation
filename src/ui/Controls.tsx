@@ -26,6 +26,7 @@ type LoadedConfigInfo = {
 }
 
 type ControlsProps = {
+  appMode: 'view' | 'record'
   fieldOptions: FieldSize[]
   field: FieldSize
   gameControllerState: AdvertisedGameControllerState
@@ -41,6 +42,7 @@ type ControlsProps = {
   loadedConfig: LoadedConfigInfo | null
   configError: string | null
   showPlayerIds: boolean
+  recordingName: string
   onFieldChange: (field: FieldSize) => void
   onGameControllerStateChange: (
     state: AdvertisedGameControllerState,
@@ -50,9 +52,14 @@ type ControlsProps = {
   onConfigFileSelected: (file: File | null) => void
   onClearConfig: () => void
   onShowPlayerIdsChange: (value: boolean) => void
+  onStartRecording: () => void
+  onStopRecording: () => void
+  onSaveRecording: () => void
+  onRecordingNameChange: (name: string) => void
 }
 
 export function Controls({
+  appMode,
   fieldOptions,
   field,
   gameControllerState,
@@ -68,6 +75,7 @@ export function Controls({
   loadedConfig,
   configError,
   showPlayerIds,
+  recordingName,
   onFieldChange,
   onGameControllerStateChange,
   onRobotCountChange,
@@ -75,6 +83,10 @@ export function Controls({
   onConfigFileSelected,
   onClearConfig,
   onShowPlayerIdsChange,
+  onStartRecording,
+  onStopRecording,
+  onSaveRecording,
+  onRecordingNameChange,
 }: ControlsProps) {
   return (
     <aside className="panel">
@@ -374,6 +386,48 @@ export function Controls({
           />
           <span>Show player IDs</span>
         </label>
+      </div>
+
+      <div className="panel__section panel__section--mode-controls">
+        <div className="panel__section-header">
+          <h2 className="panel__section-title">Recording / view</h2>
+          {appMode === 'record' ? (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={onStopRecording}
+            >
+              View
+            </button>
+          ) : null}
+        </div>
+        {appMode === 'record' ? (
+          <>
+            <label className="control">
+              <span className="control__label">Formation name</span>
+              <input
+                type="text"
+                value={recordingName}
+                onChange={(event) => onRecordingNameChange(event.target.value)}
+              />
+            </label>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={onSaveRecording}
+            >
+              Save formation
+            </button>
+          </>
+        ) : (
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={onStartRecording}
+          >
+            Record new formation
+          </button>
+        )}
       </div>
     </aside>
   )

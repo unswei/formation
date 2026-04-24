@@ -1,5 +1,8 @@
 import { useRef, useState } from 'react'
-import type { PointerEvent as ReactPointerEvent } from 'react'
+import type {
+  CSSProperties,
+  PointerEvent as ReactPointerEvent,
+} from 'react'
 
 import {
   BALL_RADIUS_METRES,
@@ -25,12 +28,26 @@ type RenderRobot = {
   known: boolean
 }
 
+type LimitLine = {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
 type FieldViewProps = {
   dimensions: FieldDimensions
   ball: Vec2
   robots: RenderRobot[]
   showPlayerIds: boolean
+  selectedRobotId?: RobotId | null
+  recording?: boolean
+  selectedRobotLimits?: LimitLine | null
+  visualScale: number
   onBallChange: (ball: Vec2) => void
+  onRobotSelect?: (robotId: RobotId) => void
+  onRobotPositionChange?: (robotId: RobotId, position: Vec2) => void
+  onRobotLimitChange?: (limit: keyof LimitLine, value: number) => void
 }
 
 export function FieldView({
@@ -38,35 +55,64 @@ export function FieldView({
   ball,
   robots,
   showPlayerIds,
+  selectedRobotId = null,
+  recording = false,
+  selectedRobotLimits = null,
+  visualScale,
   onBallChange,
+  onRobotSelect,
+  onRobotPositionChange,
+  onRobotLimitChange,
 }: FieldViewProps) {
   const frameRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
-  const activePointerId = useRef<number | null>(null)
+  const activePointer = useRef<
+    | { id: number; target: 'ball' }
+    | { id: number; target: 'robot'; robotId: RobotId }
+    | { id: number; target: 'limit'; limit: keyof LimitLine }
+    | null
+  >(null)
   const { width, height } = useElementSize(frameRef)
   const [hoverPosition, setHoverPosition] = useState<Vec2 | null>(null)
 
   const geometry = getFieldGeometry(dimensions)
+  const viewportBounds = getViewportBounds(dimensions)
+  const viewportWidth = viewportBounds.maxX - viewportBounds.minX
+  const viewportHeight = viewportBounds.maxY - viewportBounds.minY
+  const frameStyle = {
+    '--field-visual-scale': visualScale,
+    aspectRatio: `${viewportWidth} / ${viewportHeight}`,
+  } as CSSProperties
   const transform = createViewTransform(
-    getViewportBounds(dimensions),
+    viewportBounds,
     width || 960,
     height || 640,
+    24,
   )
 
-  const updateFromPointer = (event: ReactPointerEvent<SVGSVGElement>) => {
+  const worldPointFromPointer = (
+    event: ReactPointerEvent<SVGSVGElement>,
+  ): Vec2 | null => {
     const svgElement = svgRef.current
     if (!svgElement) {
-      return
+      return null
     }
 
     const bounds = svgElement.getBoundingClientRect()
-    const worldPoint = screenToWorld(
+    return screenToWorld(
       {
         x: event.clientX - bounds.left,
         y: event.clientY - bounds.top,
       },
       transform,
     )
+  }
+
+  const updateFromPointer = (event: ReactPointerEvent<SVGSVGElement>) => {
+    const worldPoint = worldPointFromPointer(event)
+    if (!worldPoint) {
+      return
+    }
     const clampedPoint = clampPointToField(worldPoint, dimensions)
 
     setHoverPosition(worldPoint)
@@ -78,46 +124,86 @@ export function FieldView({
       return
     }
 
-    activePointerId.current = event.pointerId
     event.currentTarget.setPointerCapture(event.pointerId)
+    activePointer.current = { id: event.pointerId, target: 'ball' }
     updateFromPointer(event)
   }
 
   const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
-    const svgElement = svgRef.current
-    if (!svgElement) {
+    const worldPoint = worldPointFromPointer(event)
+    if (!worldPoint) {
       return
     }
 
-    const bounds = svgElement.getBoundingClientRect()
-    const worldPoint = screenToWorld(
-      {
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      },
-      transform,
-    )
-
     setHoverPosition(worldPoint)
 
-    if (activePointerId.current === event.pointerId) {
+    const active = activePointer.current
+    if (!active || active.id !== event.pointerId) {
+      return
+    }
+
+    if (active.target === 'ball') {
       onBallChange(clampPointToField(worldPoint, dimensions))
+    } else if (active.target === 'robot') {
+      onRobotPositionChange?.(
+        active.robotId,
+        clampPointToField(worldPoint, dimensions),
+      )
+    } else if (active.limit === 'minX' || active.limit === 'maxX') {
+      onRobotLimitChange?.(active.limit, clampLimitX(worldPoint.x, dimensions))
+    } else {
+      onRobotLimitChange?.(active.limit, clampLimitY(worldPoint.y, dimensions))
     }
   }
 
   const releasePointer = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (activePointerId.current !== event.pointerId) {
+    if (activePointer.current?.id !== event.pointerId) {
       return
     }
 
-    activePointerId.current = null
+    activePointer.current = null
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
   }
 
+  const startRobotDrag = (
+    event: ReactPointerEvent<SVGCircleElement>,
+    robotId: RobotId,
+  ) => {
+    if (!recording || !event.isPrimary) {
+      return
+    }
+
+    event.stopPropagation()
+    onRobotSelect?.(robotId)
+    activePointer.current = {
+      id: event.pointerId,
+      target: 'robot',
+      robotId,
+    }
+    event.currentTarget.ownerSVGElement?.setPointerCapture(event.pointerId)
+  }
+
+  const startLimitDrag = (
+    event: ReactPointerEvent<SVGLineElement>,
+    limit: keyof LimitLine,
+  ) => {
+    if (!recording || !event.isPrimary) {
+      return
+    }
+
+    event.stopPropagation()
+    activePointer.current = {
+      id: event.pointerId,
+      target: 'limit',
+      limit,
+    }
+    event.currentTarget.ownerSVGElement?.setPointerCapture(event.pointerId)
+  }
+
   return (
-    <div className="field-frame" ref={frameRef}>
+    <div className="field-frame" ref={frameRef} style={frameStyle}>
       <svg
         ref={svgRef}
         className="field-svg"
@@ -227,6 +313,42 @@ export function FieldView({
             r={BALL_RADIUS_METRES}
             className="ball-disc"
           />
+          {recording && selectedRobotLimits ? (
+            <>
+              <line
+                x1={selectedRobotLimits.minX}
+                y1={geometry.fieldRect.minY}
+                x2={selectedRobotLimits.minX}
+                y2={geometry.fieldRect.maxY}
+                className="limit-line limit-line--min-x"
+                onPointerDown={(event) => startLimitDrag(event, 'minX')}
+              />
+              <line
+                x1={selectedRobotLimits.maxX}
+                y1={geometry.fieldRect.minY}
+                x2={selectedRobotLimits.maxX}
+                y2={geometry.fieldRect.maxY}
+                className="limit-line limit-line--max-x"
+                onPointerDown={(event) => startLimitDrag(event, 'maxX')}
+              />
+              <line
+                x1={geometry.fieldRect.minX}
+                y1={selectedRobotLimits.minY}
+                x2={geometry.fieldRect.maxX}
+                y2={selectedRobotLimits.minY}
+                className="limit-line limit-line--min-y"
+                onPointerDown={(event) => startLimitDrag(event, 'minY')}
+              />
+              <line
+                x1={geometry.fieldRect.minX}
+                y1={selectedRobotLimits.maxY}
+                x2={geometry.fieldRect.maxX}
+                y2={selectedRobotLimits.maxY}
+                className="limit-line limit-line--max-y"
+                onPointerDown={(event) => startLimitDrag(event, 'maxY')}
+              />
+            </>
+          ) : null}
           {robots.map((robot) => (
             <circle
               key={robot.id}
@@ -234,8 +356,13 @@ export function FieldView({
               cy={robot.position.y}
               r={ROBOT_RADIUS_METRES}
               className={
-                robot.known ? 'robot-disc' : 'robot-disc robot-disc--bench'
+                robot.id === selectedRobotId
+                  ? 'robot-disc robot-disc--selected'
+                  : robot.known
+                    ? 'robot-disc'
+                    : 'robot-disc robot-disc--bench'
               }
+              onPointerDown={(event) => startRobotDrag(event, robot.id)}
             />
           ))}
         </g>
@@ -283,5 +410,21 @@ export function FieldView({
         ) : null}
       </div>
     </div>
+  )
+}
+
+function clampLimitX(value: number, dimensions: FieldDimensions): number {
+  const geometry = getFieldGeometry(dimensions)
+  return Math.min(
+    geometry.fieldRect.maxX,
+    Math.max(geometry.fieldRect.minX, value),
+  )
+}
+
+function clampLimitY(value: number, dimensions: FieldDimensions): number {
+  const geometry = getFieldGeometry(dimensions)
+  return Math.min(
+    geometry.fieldRect.maxY,
+    Math.max(geometry.fieldRect.minY, value),
   )
 }

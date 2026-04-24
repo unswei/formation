@@ -291,9 +291,24 @@ def compute_robot_position(
         mode_defaults=mode_defaults,
         global_defaults=global_defaults,
     )
+    max_x = resolve_max_x(
+        robot_config=robot_config,
+        mode_defaults=mode_defaults,
+        global_defaults=global_defaults,
+    )
+    min_y = resolve_min_y(
+        robot_config=robot_config,
+        mode_defaults=mode_defaults,
+        global_defaults=global_defaults,
+    )
+    max_y = resolve_max_y(
+        robot_config=robot_config,
+        mode_defaults=mode_defaults,
+        global_defaults=global_defaults,
+    )
 
-    position_x = max(min_x, ball["x"] * attraction_x + offset_x)
-    position_y = ball["y"] * attraction_y + offset_y
+    position_x = min(max_x, max(min_x, ball["x"] * attraction_x + offset_x))
+    position_y = min(max_y, max(min_y, ball["y"] * attraction_y + offset_y))
 
     if not (isfinite(position_x) and isfinite(position_y)):
         return unknown_position(f"invalid result for robot {robot_id} in {mode_name}")
@@ -338,6 +353,57 @@ def resolve_min_x(
             return candidate
 
     return -inf
+
+
+def resolve_max_x(
+    *,
+    robot_config: dict[str, Any],
+    mode_defaults: dict[str, Any] | None,
+    global_defaults: dict[str, Any] | None,
+) -> float:
+    for candidate in (
+        read_finite_number(robot_config.get("maxX")),
+        read_finite_number(mode_defaults.get("maxX") if mode_defaults else None),
+        read_finite_number(global_defaults.get("maxX") if global_defaults else None),
+    ):
+        if candidate is not None:
+            return candidate
+
+    return inf
+
+
+def resolve_min_y(
+    *,
+    robot_config: dict[str, Any],
+    mode_defaults: dict[str, Any] | None,
+    global_defaults: dict[str, Any] | None,
+) -> float:
+    for candidate in (
+        read_finite_number(robot_config.get("minY")),
+        read_finite_number(mode_defaults.get("minY") if mode_defaults else None),
+        read_finite_number(global_defaults.get("minY") if global_defaults else None),
+    ):
+        if candidate is not None:
+            return candidate
+
+    return -inf
+
+
+def resolve_max_y(
+    *,
+    robot_config: dict[str, Any],
+    mode_defaults: dict[str, Any] | None,
+    global_defaults: dict[str, Any] | None,
+) -> float:
+    for candidate in (
+        read_finite_number(robot_config.get("maxY")),
+        read_finite_number(mode_defaults.get("maxY") if mode_defaults else None),
+        read_finite_number(global_defaults.get("maxY") if global_defaults else None),
+    ):
+        if candidate is not None:
+            return candidate
+
+    return inf
 
 
 def read_nested_number(

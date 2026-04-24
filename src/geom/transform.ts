@@ -14,6 +14,7 @@ export function createViewTransform(
   width: number,
   height: number,
   padding = 24,
+  zoom = 1,
 ): ViewTransform {
   const safeWidth = Math.max(width, 1)
   const safeHeight = Math.max(height, 1)
@@ -21,10 +22,11 @@ export function createViewTransform(
   const availableHeight = Math.max(safeHeight - padding * 2, 1)
   const worldWidth = bounds.maxX - bounds.minX
   const worldHeight = bounds.maxY - bounds.minY
-  const scale = Math.min(
+  const baseScale = Math.min(
     availableWidth / worldWidth,
     availableHeight / worldHeight,
   )
+  const scale = baseScale * Math.max(0.5, Math.min(zoom, 2))
   const offsetX = (safeWidth - worldWidth * scale) / 2 - bounds.minX * scale
   const offsetY = (safeHeight - worldHeight * scale) / 2 + bounds.maxY * scale
 

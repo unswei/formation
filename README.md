@@ -7,6 +7,9 @@ The tool now selects formation modes from the same GameController-advertised
 fields a player receives: `gamePhase`, `state`, `setPlay`, `kickingTeam`,
 `firstHalf`, and `stopped`.
 
+It also includes a recording mode for building formation JSON files from
+dragged player targets and ball samples.
+
 ## Stack
 
 - React 19 + Vite + TypeScript
@@ -48,6 +51,12 @@ The Vite dev server proxies `/api/*` requests to `http://127.0.0.1:8000`.
 npm run check
 ```
 
+The standalone Python player template can be checked with:
+
+```bash
+python -m unittest discover player_template
+```
+
 ## Project layout
 
 - `src/` contains the React app, SVG field renderer, config validation, and API
@@ -55,3 +64,5 @@ npm run check
 - `backend/app/` contains the FastAPI service and formation computation logic.
 - `src/config/field_sizes.json` holds the S/M/L field definitions used to derive
   all field geometry.
+- `player_template/` contains a pure Python reference implementation that can
+  read the same formation JSON and compute a single player's target position.

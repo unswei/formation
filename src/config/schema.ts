@@ -10,6 +10,9 @@ export type FormationConfig = {
   defaults?: {
     attraction?: { x?: number; y?: number }
     minX?: number
+    maxX?: number
+    minY?: number
+    maxY?: number
   }
   modes: Record<string, ModeConfig>
 }
@@ -18,6 +21,9 @@ export type ModeConfig = {
   defaults?: {
     attraction?: { x?: number; y?: number }
     minX?: number
+    maxX?: number
+    minY?: number
+    maxY?: number
   }
   robots: Partial<Record<string, RobotConfig>>
 }
@@ -26,6 +32,9 @@ export type RobotConfig = {
   offset: { x: number; y: number }
   attraction?: { x?: number; y?: number }
   minX?: number
+  maxX?: number
+  minY?: number
+  maxY?: number
 }
 
 type DefaultsConfig = NonNullable<FormationConfig['defaults']>
@@ -207,6 +216,27 @@ function parseRobotConfig(
     robotConfig.minX = minX
   }
 
+  const maxX = parseOptionalFiniteNumber(value.maxX)
+  if (value.maxX !== undefined && maxX === undefined) {
+    warnings.push(`Ignoring ${path}.maxX because it is not finite.`)
+  } else if (maxX !== undefined) {
+    robotConfig.maxX = maxX
+  }
+
+  const minY = parseOptionalFiniteNumber(value.minY)
+  if (value.minY !== undefined && minY === undefined) {
+    warnings.push(`Ignoring ${path}.minY because it is not finite.`)
+  } else if (minY !== undefined) {
+    robotConfig.minY = minY
+  }
+
+  const maxY = parseOptionalFiniteNumber(value.maxY)
+  if (value.maxY !== undefined && maxY === undefined) {
+    warnings.push(`Ignoring ${path}.maxY because it is not finite.`)
+  } else if (maxY !== undefined) {
+    robotConfig.maxY = maxY
+  }
+
   return robotConfig
 }
 
@@ -239,6 +269,27 @@ function parseDefaults(
     warnings.push(`Ignoring ${path}.minX because it is not finite.`)
   } else if (minX !== undefined) {
     defaults.minX = minX
+  }
+
+  const maxX = parseOptionalFiniteNumber(value.maxX)
+  if (value.maxX !== undefined && maxX === undefined) {
+    warnings.push(`Ignoring ${path}.maxX because it is not finite.`)
+  } else if (maxX !== undefined) {
+    defaults.maxX = maxX
+  }
+
+  const minY = parseOptionalFiniteNumber(value.minY)
+  if (value.minY !== undefined && minY === undefined) {
+    warnings.push(`Ignoring ${path}.minY because it is not finite.`)
+  } else if (minY !== undefined) {
+    defaults.minY = minY
+  }
+
+  const maxY = parseOptionalFiniteNumber(value.maxY)
+  if (value.maxY !== undefined && maxY === undefined) {
+    warnings.push(`Ignoring ${path}.maxY because it is not finite.`)
+  } else if (maxY !== undefined) {
+    defaults.maxY = maxY
   }
 
   return Object.keys(defaults).length > 0 ? defaults : undefined

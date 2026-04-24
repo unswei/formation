@@ -17,7 +17,8 @@ The formation file is JSON with a small top-level structure:
   },
   "defaults": {
     "attraction": { "x": 0.7, "y": 0.5 },
-    "minX": -4.0
+    "minX": -4.0,
+    "maxX": 4.5
   },
   "modes": {
     "normal_play": {
@@ -28,7 +29,8 @@ The formation file is JSON with a small top-level structure:
         "1": {
           "offset": { "x": -4.2, "y": 0.0 },
           "attraction": { "x": 0.2, "y": 0.1 },
-          "minX": -4.5
+          "minX": -4.5,
+          "maxX": 2.0
         }
       }
     }
@@ -104,8 +106,8 @@ legacy semantic mode names above, then to `normal_play`.
 For now the backend uses this simple rule:
 
 ```text
-base.x = max(minX, ball.x * attraction.x + offset.x)
-base.y =           ball.y * attraction.y + offset.y
+base.x = clamp(ball.x * attraction.x + offset.x, minX, maxX)
+base.y = clamp(ball.y * attraction.y + offset.y, minY, maxY)
 ```
 
 So:
@@ -113,8 +115,9 @@ So:
 - `offset` is the robot's basic shape relative to the ball.
 - `attraction.x` and `attraction.y` control how strongly the robot follows the ball.
 - `minX` acts as a left-side clipping limit, so the robot cannot be pulled further left than that value.
-
-There is no `maxX` clipping in the config for v0.
+- `maxX` acts as a right-side clipping limit, so the robot cannot be pulled further right than that value.
+- `minY` acts as a lower y-axis clipping limit.
+- `maxY` acts as an upper y-axis clipping limit.
 
 ## Override order
 
@@ -130,6 +133,9 @@ Built-in fallback values are:
 - `attraction.x = 1`
 - `attraction.y = 1`
 - `minX = -Infinity`
+- `maxX = Infinity`
+- `minY = -Infinity`
+- `maxY = Infinity`
 
 ## What the fields mean
 
@@ -151,14 +157,42 @@ This is optional and can be set globally, per mode, or per robot.
 - less than `1.0` means softer movement
 - greater than `1.0` means more aggressive movement
 
-### `minX`
+### `minX` / `maxX` / `minY` / `maxY`
 
-Optional, main "clipping" value in the formation file.
+Optional clipping values in the formation file.
 
 Examples:
 
-- `minY: -4.5` keeps a player from drifting too far left
+- `minX: -4.5` keeps a player from drifting too far left
 - `minX: -1.5` keeps a player from dropping back too deep
+- `maxX: 2.5` keeps a player from drifting too far right
+- `minY: -2.0` keeps a player from drifting too far down-field
+- `maxY: 2.0` keeps a player from drifting too far up-field
+
+## Recording mode
+
+The app can record new exact advertised-state modes. Select
+`Record new formation`, choose the advertised GameController fields, drag the
+ball and players, then capture sample A and sample B for each active player.
+
+For each selected player, the app infers:
+
+```text
+attraction.x = (playerB.x - playerA.x) / (ballB.x - ballA.x)
+offset.x     = playerA.x - ballA.x * attraction.x
+```
+
+The same formula is used for `y`. The four high-contrast lines shown for a
+selected player are `minX`, `maxX`, `minY`, and `maxY`; drag them to set that
+player's limits.
+
+Recorded modes are saved under exact advertised-state keys, for example:
+
+```text
+advertised__phase_normal__state_ready__set_play_none__kicking_none
+```
+
+`Save formation` downloads the current recorded JSON file.
 
 ## Missing or partial configs
 
