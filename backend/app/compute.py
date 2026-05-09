@@ -31,20 +31,28 @@ LEGACY_FORMATION_MODE_ALIASES: dict[str, FormationMode] = {
 
 VALID_FORMATION_MODES: set[str] = {
     "normal_play",
-    "kickoff_us",
-    "kickoff_them",
-    "direct_free_kick_us",
-    "direct_free_kick_them",
-    "indirect_free_kick_us",
-    "indirect_free_kick_them",
-    "throw_in_us",
-    "throw_in_them",
-    "goal_kick_us",
-    "goal_kick_them",
-    "corner_kick_us",
-    "corner_kick_them",
-    "penalty_kick_us",
-    "penalty_kick_them",
+
+    "kickoff_us",               # indirect
+    "kickoff_them",             # indirect
+
+    "direct_free_kick_us",      # direct
+    "direct_free_kick_them",    # direct
+
+    "indirect_free_kick_us",    # indirect
+    "indirect_free_kick_them",  # indirect
+
+    "throw_in_us",              # indirect
+    "throw_in_them",            # indirect
+
+    "goal_kick_us",             # direct
+    "goal_kick_them",           # direct
+
+    "corner_kick_us",           # direct
+    "corner_kick_them",         # direct
+
+    "penalty_kick_us",          # direct
+    "penalty_kick_them",        # direct
+
     "timeout",
 }
 
