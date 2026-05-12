@@ -105,7 +105,60 @@ def compute_positions(
             field_dimensions=resolved_field_dimensions,
         )
 
+    warn_set_play_spacing_violations(
+        positions=positions,
+        ball=ball,
+        field_dimensions=resolved_field_dimensions,
+        legacy_mode=legacy_mode,
+        warnings=warnings,
+    )
+
     return positions, warnings
+
+
+def warn_set_play_spacing_violations(
+    *,
+    positions: dict[str, dict[str, Any]],
+    ball: dict[str, float],
+    field_dimensions: FieldDimensions | None,
+    legacy_mode: str,
+    warnings: list[str],
+) -> None:
+    if legacy_mode != "throw_in_them":
+        return
+
+    if field_dimensions is None:
+        return
+
+    centre_circle_diameter = read_finite_number(
+        field_dimensions.get("centreCircleDiameter")
+    )
+
+    if centre_circle_diameter is None:
+        return
+
+    minimum_distance = centre_circle_diameter / 2.0
+
+    for robot_id, position in positions.items():
+        if not position.get("ok"):
+            continue
+
+        x = read_finite_number(position.get("x"))
+        y = read_finite_number(position.get("y"))
+
+        if x is None or y is None:
+            continue
+
+        dx = x - ball["x"]
+        dy = y - ball["y"]
+
+        distance = (dx * dx + dy * dy) ** 0.5
+
+        if distance < minimum_distance:
+            warnings.append(
+                f'Robot {robot_id} is only {distance:.2f}m from the ball during '
+                f'"throw_in_them"; recommended minimum is {minimum_distance:.2f}m.'
+            )
 
 
 def load_field_dimensions(
