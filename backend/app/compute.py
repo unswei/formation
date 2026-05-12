@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from math import inf, isfinite
+from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 FormationMode = Literal[
@@ -22,6 +24,9 @@ FormationMode = Literal[
     "timeout",
 ]
 
+TeamPerspective = Literal["us", "them", "unknown"]
+FieldDimensions = dict[str, float]
+
 LEGACY_FORMATION_MODE_ALIASES: dict[str, FormationMode] = {
     "corner_us": "corner_kick_us",
     "corner_them": "corner_kick_them",
@@ -31,32 +36,22 @@ LEGACY_FORMATION_MODE_ALIASES: dict[str, FormationMode] = {
 
 VALID_FORMATION_MODES: set[str] = {
     "normal_play",
-
-    "kickoff_us",               # indirect
-    "kickoff_them",             # indirect
-
-    "direct_free_kick_us",      # direct
-    "direct_free_kick_them",    # direct
-
-    "indirect_free_kick_us",    # indirect
-    "indirect_free_kick_them",  # indirect
-
-    "throw_in_us",              # indirect
-    "throw_in_them",            # indirect
-
-    "goal_kick_us",             # direct
-    "goal_kick_them",           # direct
-
-    "corner_kick_us",           # direct
-    "corner_kick_them",         # direct
-
-    "penalty_kick_us",          # direct
-    "penalty_kick_them",        # direct
-
+    "kickoff_us",
+    "kickoff_them",
+    "direct_free_kick_us",
+    "direct_free_kick_them",
+    "indirect_free_kick_us",
+    "indirect_free_kick_them",
+    "throw_in_us",
+    "throw_in_them",
+    "goal_kick_us",
+    "goal_kick_them",
+    "corner_kick_us",
+    "corner_kick_them",
+    "penalty_kick_us",
+    "penalty_kick_them",
     "timeout",
 }
-
-TeamPerspective = Literal["us", "them", "unknown"]
 
 
 class AdvertisedGameControllerState(TypedDict):
@@ -78,8 +73,19 @@ def compute_positions(
     robot_ids: list[int],
     active_players: int,
     formation: dict[str, Any],
+    field_dimensions: FieldDimensions | None = None,
+    field_size: str | None = None,
+    field_sizes_path: str | Path | None = None,
 ) -> tuple[dict[str, dict[str, Any]], list[str]]:
     warnings: list[str] = []
+
+    resolved_field_dimensions = load_field_dimensions(
+        field_dimensions=field_dimensions,
+        field_size=field_size,
+        field_sizes_path=field_sizes_path,
+        warnings=warnings,
+    )
+
     resolved_robot_ids = resolve_robot_ids(robot_ids, active_players, warnings)
     resolved_mode, resolved_mode_name = resolve_mode_config(
         formation,
@@ -96,18 +102,224 @@ def compute_positions(
             mode_config=resolved_mode,
             ball=ball,
             formation=formation,
+            field_dimensions=resolved_field_dimensions,
         )
 
     return positions, warnings
 
 
-def resolve_robot_ids(
-    robot_ids: list[int], active_players: int, warnings: list[str]
-) -> list[int]:
-    if robot_ids:
-        source_ids = robot_ids
-    else:
-        source_ids = list(range(1, active_players + 1))
+def load_field_dimensions(
+    *,
+    field_dimensions: FieldDimensions | None = None,
+    field_size: str | None = None,
+    field_sizes_path: str | Path | None = None,
+    warnings: list[str] | None = None,
+) -> FieldDimensions | None:
+    if field_dimensions is not None:
+        return normalise_field_dimensions(field_dimensions)
+
+    if field_size is None and field_sizes_path is None:
+        return None
+
+    if field_size is None:
+        append_warning(warnings, "field_sizes_path was provided but field_size was missing.")
+        return None
+
+    if field_sizes_path is None:
+        append_warning(warnings, "field_size was provided but field_sizes_path was missing.")
+        return None
+
+    try:
+        with Path(field_sizes_path).open("r", encoding="utf-8") as file:
+            table = json.load(file)
+    except OSError as exc:
+        append_warning(warnings, f'Could not read field sizes file "{field_sizes_path}": {exc}')
+        return None
+    except json.JSONDecodeError as exc:
+        append_warning(warnings, f'Could not parse field sizes file "{field_sizes_path}": {exc}')
+        return None
+
+    if not isinstance(table, dict):
+        append_warning(warnings, "Field sizes file must contain a JSON object.")
+        return None
+
+    selected = table.get(field_size)
+    if not isinstance(selected, dict):
+        append_warning(warnings, f'Field size "{field_size}" was not found.')
+        return None
+
+    return normalise_field_dimensions(selected)
+
+
+def normalise_field_dimensions(value: dict[str, Any]) -> FieldDimensions | None:
+    result: FieldDimensions = {}
+    for key, raw in value.items():
+        number = read_finite_number(raw)
+        if number is not None:
+            result[key] = number
+    return result
+
+
+def compute_field_position(
+    value: Any,
+    field_dimensions: FieldDimensions | None,
+    *,
+    fallback: float | None = None,
+) -> float | None:
+    resolved = resolve_measure(value, field_dimensions)
+    return resolved if resolved is not None else fallback
+
+
+def resolve_measure(value: Any, field_dimensions: FieldDimensions | None) -> float | None:
+    number = read_finite_number(value)
+    if number is not None:
+        return number
+
+    spec = read_dict(value)
+    if spec is None:
+        return None
+
+    position_name = spec.get("position")
+    if isinstance(position_name, str):
+        base = resolve_named_position(position_name, field_dimensions)
+        if base is None:
+            return None
+        offset = read_finite_number(spec.get("offset"))
+        return base + (offset if offset is not None else 0.0)
+
+    op = spec.get("op")
+    if isinstance(op, str):
+        terms = spec.get("terms")
+        if not isinstance(terms, list):
+            return None
+
+        resolved_terms = [resolve_measure(term, field_dimensions) for term in terms]
+        if any(term is None for term in resolved_terms):
+            return None
+
+        numbers = [term for term in resolved_terms if term is not None]
+
+        if op == "add":
+            return sum(numbers)
+
+        if op == "subtract" and numbers:
+            result = numbers[0]
+            for number in numbers[1:]:
+                result -= number
+            return result
+
+        if op == "multiply":
+            result = 1.0
+            for number in numbers:
+                result *= number
+            return result
+
+        if op == "negate" and len(numbers) == 1:
+            return -numbers[0]
+
+        return None
+
+    if field_dimensions is None:
+        return None
+
+    key = spec.get("field")
+    if not isinstance(key, str):
+        key = spec.get("feature")
+
+    if not isinstance(key, str):
+        return None
+
+    base = read_finite_number(field_dimensions.get(key))
+    if base is None:
+        return None
+
+    scale = read_finite_number(spec.get("scale"))
+    offset = read_finite_number(spec.get("offset"))
+
+    result = base * (scale if scale is not None else 1.0) + (offset if offset is not None else 0.0)
+    return result if isfinite(result) else None
+
+
+def resolve_named_position(name: str, field_dimensions: FieldDimensions | None) -> float | None:
+    if field_dimensions is None:
+        return None
+
+    length = read_finite_number(field_dimensions.get("length"))
+    width = read_finite_number(field_dimensions.get("width"))
+    goal_area_length = read_finite_number(field_dimensions.get("goalAreaLength"))
+    goal_area_width = read_finite_number(field_dimensions.get("goalAreaWidth"))
+    penalty_area_length = read_finite_number(field_dimensions.get("penaltyAreaLength"))
+    penalty_area_width = read_finite_number(field_dimensions.get("penaltyAreaWidth"))
+    penalty_mark_distance = read_finite_number(field_dimensions.get("penaltyMarkDistance"))
+
+    if length is None or width is None:
+        return None
+
+    min_x = -length / 2
+    max_x = length / 2
+    min_y = -width / 2
+    max_y = width / 2
+
+    positions: dict[str, float] = {
+        "centre_x": 0.0,
+        "center_x": 0.0,
+        "centre_y": 0.0,
+        "center_y": 0.0,
+        "field_min_x": min_x,
+        "field_max_x": max_x,
+        "field_min_y": min_y,
+        "field_max_y": max_y,
+    }
+
+    if goal_area_length is not None:
+        positions.update(
+            {
+                "left_goal_area_min_x": min_x,
+                "left_goal_area_max_x": min_x + goal_area_length,
+                "right_goal_area_min_x": max_x - goal_area_length,
+                "right_goal_area_max_x": max_x,
+            }
+        )
+
+    if goal_area_width is not None:
+        positions.update(
+            {
+                "goal_area_min_y": -goal_area_width / 2,
+                "goal_area_max_y": goal_area_width / 2,
+            }
+        )
+
+    if penalty_area_length is not None:
+        positions.update(
+            {
+                "left_penalty_area_min_x": min_x,
+                "left_penalty_area_max_x": min_x + penalty_area_length,
+                "right_penalty_area_min_x": max_x - penalty_area_length,
+                "right_penalty_area_max_x": max_x,
+            }
+        )
+
+    if penalty_area_width is not None:
+        positions.update(
+            {
+                "penalty_area_min_y": -penalty_area_width / 2,
+                "penalty_area_max_y": penalty_area_width / 2,
+            }
+        )
+
+    if penalty_mark_distance is not None:
+        positions.update(
+            {
+                "left_penalty_mark_x": min_x + penalty_mark_distance,
+                "right_penalty_mark_x": max_x - penalty_mark_distance,
+            }
+        )
+
+    return positions.get(name)
+
+
+def resolve_robot_ids(robot_ids: list[int], active_players: int, warnings: list[str]) -> list[int]:
+    source_ids = robot_ids if robot_ids else list(range(1, active_players + 1))
 
     seen: set[int] = set()
     resolved: list[int] = []
@@ -133,10 +345,7 @@ def resolve_formation_mode(
     perspective = resolve_team_perspective(game_controller_state)
 
     if game_phase == "timeout":
-        return (
-            build_advertised_state_mode(game_controller_state, perspective),
-            "timeout",
-        )
+        return build_advertised_state_mode(game_controller_state, perspective), "timeout"
 
     if game_phase == "penalty_shoot_out":
         return (
@@ -146,10 +355,7 @@ def resolve_formation_mode(
 
     set_play_mode = resolve_set_play_mode(set_play, perspective)
     if set_play_mode is not None:
-        return (
-            build_advertised_state_mode(game_controller_state, perspective),
-            set_play_mode,
-        )
+        return build_advertised_state_mode(game_controller_state, perspective), set_play_mode
 
     if set_play == "none" and state != "playing" and perspective != "unknown":
         return (
@@ -157,48 +363,33 @@ def resolve_formation_mode(
             "kickoff_us" if perspective == "us" else "kickoff_them",
         )
 
-    return (
-        build_advertised_state_mode(game_controller_state, perspective),
-        "normal_play",
-    )
+    return build_advertised_state_mode(game_controller_state, perspective), "normal_play"
 
 
-def resolve_team_perspective(
-    game_controller_state: AdvertisedGameControllerState,
-) -> TeamPerspective:
+def resolve_team_perspective(game_controller_state: AdvertisedGameControllerState) -> TeamPerspective:
     kicking_team = game_controller_state["kickingTeam"]
     if kicking_team is None:
         return "unknown"
 
-    return (
-        "us"
-        if kicking_team == game_controller_state["ownTeamNumber"]
-        else "them"
-    )
+    return "us" if kicking_team == game_controller_state["ownTeamNumber"] else "them"
 
 
-def resolve_set_play_mode(
-    set_play: str, perspective: TeamPerspective
-) -> FormationMode | None:
+def resolve_set_play_mode(set_play: str, perspective: TeamPerspective) -> FormationMode | None:
     if set_play == "none" or perspective == "unknown":
         return None
 
     suffix = "us" if perspective == "us" else "them"
 
-    if set_play == "direct_free_kick":
-        return f"direct_free_kick_{suffix}"
-    if set_play == "indirect_free_kick":
-        return f"indirect_free_kick_{suffix}"
-    if set_play == "penalty_kick":
-        return f"penalty_kick_{suffix}"
-    if set_play == "throw_in":
-        return f"throw_in_{suffix}"
-    if set_play == "goal_kick":
-        return f"goal_kick_{suffix}"
-    if set_play == "corner_kick":
-        return f"corner_kick_{suffix}"
+    mapping: dict[str, FormationMode] = {
+        "direct_free_kick": f"direct_free_kick_{suffix}",  # type: ignore[dict-item]
+        "indirect_free_kick": f"indirect_free_kick_{suffix}",  # type: ignore[dict-item]
+        "penalty_kick": f"penalty_kick_{suffix}",  # type: ignore[dict-item]
+        "throw_in": f"throw_in_{suffix}",  # type: ignore[dict-item]
+        "goal_kick": f"goal_kick_{suffix}",  # type: ignore[dict-item]
+        "corner_kick": f"corner_kick_{suffix}",  # type: ignore[dict-item]
+    }
 
-    return None
+    return mapping.get(set_play)
 
 
 def resolve_mode_config(
@@ -222,11 +413,11 @@ def resolve_mode_config(
     if requested_mode is not None:
         return requested_mode, legacy_mode
 
-    legacy_alias = LEGACY_FORMATION_MODE_ALIASES.get(legacy_mode)
-    if legacy_alias is not None:
-        legacy_mode = read_dict(modes.get(legacy_alias))
-        if legacy_mode is not None:
-            return legacy_mode, legacy_alias
+    alias = LEGACY_FORMATION_MODE_ALIASES.get(legacy_mode)
+    if alias is not None:
+        requested_mode = read_dict(modes.get(alias))
+        if requested_mode is not None:
+            return requested_mode, alias
 
     if legacy_mode not in VALID_FORMATION_MODES:
         warnings.append(f'Play mode "{legacy_mode}" is not recognised.')
@@ -264,6 +455,7 @@ def compute_robot_position(
     mode_config: dict[str, Any] | None,
     ball: dict[str, float],
     formation: dict[str, Any],
+    field_dimensions: FieldDimensions | None,
 ) -> dict[str, Any]:
     if mode_config is None:
         return unknown_position(f"missing config for robot {robot_id} in {mode_name}")
@@ -274,8 +466,9 @@ def compute_robot_position(
         return unknown_position(f"missing config for robot {robot_id} in {mode_name}")
 
     offset = read_dict(robot_config.get("offset"))
-    offset_x = read_finite_number(offset.get("x") if offset is not None else None)
-    offset_y = read_finite_number(offset.get("y") if offset is not None else None)
+    offset_x = compute_field_position(offset.get("x") if offset is not None else None, field_dimensions)
+    offset_y = compute_field_position(offset.get("y") if offset is not None else None, field_dimensions)
+
     if offset_x is None or offset_y is None:
         return unknown_position(f"invalid offset for robot {robot_id} in {mode_name}")
 
@@ -294,26 +487,11 @@ def compute_robot_position(
         mode_defaults=mode_defaults,
         global_defaults=global_defaults,
     )
-    min_x = resolve_min_x(
-        robot_config=robot_config,
-        mode_defaults=mode_defaults,
-        global_defaults=global_defaults,
-    )
-    max_x = resolve_max_x(
-        robot_config=robot_config,
-        mode_defaults=mode_defaults,
-        global_defaults=global_defaults,
-    )
-    min_y = resolve_min_y(
-        robot_config=robot_config,
-        mode_defaults=mode_defaults,
-        global_defaults=global_defaults,
-    )
-    max_y = resolve_max_y(
-        robot_config=robot_config,
-        mode_defaults=mode_defaults,
-        global_defaults=global_defaults,
-    )
+
+    min_x = resolve_position_limit(robot_config, mode_defaults, global_defaults, "minX", -inf, field_dimensions)
+    max_x = resolve_position_limit(robot_config, mode_defaults, global_defaults, "maxX", inf, field_dimensions)
+    min_y = resolve_position_limit(robot_config, mode_defaults, global_defaults, "minY", -inf, field_dimensions)
+    max_y = resolve_position_limit(robot_config, mode_defaults, global_defaults, "maxY", inf, field_dimensions)
 
     position_x = min(max_x, max(min_x, ball["x"] * attraction_x + offset_x))
     position_y = min(max_y, max(min_y, ball["y"] * attraction_y + offset_y))
@@ -321,11 +499,7 @@ def compute_robot_position(
     if not (isfinite(position_x) and isfinite(position_y)):
         return unknown_position(f"invalid result for robot {robot_id} in {mode_name}")
 
-    return {
-        "ok": True,
-        "x": position_x,
-        "y": position_y,
-    }
+    return {"ok": True, "x": position_x, "y": position_y}
 
 
 def resolve_attraction_value(
@@ -346,77 +520,25 @@ def resolve_attraction_value(
     return 1.0
 
 
-def resolve_min_x(
-    *,
+def resolve_position_limit(
     robot_config: dict[str, Any],
     mode_defaults: dict[str, Any] | None,
     global_defaults: dict[str, Any] | None,
+    key: str,
+    fallback: float,
+    field_dimensions: FieldDimensions | None,
 ) -> float:
-    for candidate in (
-        read_finite_number(robot_config.get("minX")),
-        read_finite_number(mode_defaults.get("minX") if mode_defaults else None),
-        read_finite_number(global_defaults.get("minX") if global_defaults else None),
-    ):
+    for source in (robot_config, mode_defaults, global_defaults):
+        if source is None:
+            continue
+        candidate = compute_field_position(source.get(key), field_dimensions)
         if candidate is not None:
             return candidate
 
-    return -inf
+    return fallback
 
 
-def resolve_max_x(
-    *,
-    robot_config: dict[str, Any],
-    mode_defaults: dict[str, Any] | None,
-    global_defaults: dict[str, Any] | None,
-) -> float:
-    for candidate in (
-        read_finite_number(robot_config.get("maxX")),
-        read_finite_number(mode_defaults.get("maxX") if mode_defaults else None),
-        read_finite_number(global_defaults.get("maxX") if global_defaults else None),
-    ):
-        if candidate is not None:
-            return candidate
-
-    return inf
-
-
-def resolve_min_y(
-    *,
-    robot_config: dict[str, Any],
-    mode_defaults: dict[str, Any] | None,
-    global_defaults: dict[str, Any] | None,
-) -> float:
-    for candidate in (
-        read_finite_number(robot_config.get("minY")),
-        read_finite_number(mode_defaults.get("minY") if mode_defaults else None),
-        read_finite_number(global_defaults.get("minY") if global_defaults else None),
-    ):
-        if candidate is not None:
-            return candidate
-
-    return -inf
-
-
-def resolve_max_y(
-    *,
-    robot_config: dict[str, Any],
-    mode_defaults: dict[str, Any] | None,
-    global_defaults: dict[str, Any] | None,
-) -> float:
-    for candidate in (
-        read_finite_number(robot_config.get("maxY")),
-        read_finite_number(mode_defaults.get("maxY") if mode_defaults else None),
-        read_finite_number(global_defaults.get("maxY") if global_defaults else None),
-    ):
-        if candidate is not None:
-            return candidate
-
-    return inf
-
-
-def read_nested_number(
-    mapping: dict[str, Any] | None, parent_key: str, key: str
-) -> float | None:
+def read_nested_number(mapping: dict[str, Any] | None, parent_key: str, key: str) -> float | None:
     parent = read_dict(mapping.get(parent_key) if mapping else None)
     return read_finite_number(parent.get(key) if parent else None)
 
@@ -434,7 +556,9 @@ def read_finite_number(value: Any) -> float | None:
 
 
 def unknown_position(reason: str) -> dict[str, Any]:
-    return {
-        "ok": False,
-        "reason": reason,
-    }
+    return {"ok": False, "reason": reason}
+
+
+def append_warning(warnings: list[str] | None, message: str) -> None:
+    if warnings is not None:
+        warnings.append(message)

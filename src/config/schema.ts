@@ -4,15 +4,32 @@ import {
 } from '../types'
 import type { FormationMode, LegacyFormationMode } from '../types'
 
+export type FieldMeasure =
+  | number
+  | {
+      field?: string
+      feature?: string
+      scale?: number
+      offset?: number
+    }
+  | {
+      position: string
+      offset?: number
+    }
+  | {
+      op: 'add' | 'subtract' | 'multiply' | 'negate'
+      terms: FieldMeasure[]
+    }
+
 export type FormationConfig = {
   version: 1
   meta?: { name?: string; notes?: string }
   defaults?: {
     attraction?: { x?: number; y?: number }
-    minX?: number
-    maxX?: number
-    minY?: number
-    maxY?: number
+    minX?: FieldMeasure
+    maxX?: FieldMeasure
+    minY?: FieldMeasure
+    maxY?: FieldMeasure
   }
   modes: Record<string, ModeConfig>
 }
@@ -20,21 +37,21 @@ export type FormationConfig = {
 export type ModeConfig = {
   defaults?: {
     attraction?: { x?: number; y?: number }
-    minX?: number
-    maxX?: number
-    minY?: number
-    maxY?: number
+    minX?: FieldMeasure
+    maxX?: FieldMeasure
+    minY?: FieldMeasure
+    maxY?: FieldMeasure
   }
   robots: Partial<Record<string, RobotConfig>>
 }
 
 export type RobotConfig = {
-  offset: { x: number; y: number }
+  offset: { x: FieldMeasure; y: FieldMeasure }
   attraction?: { x?: number; y?: number }
-  minX?: number
-  maxX?: number
-  minY?: number
-  maxY?: number
+  minX?: FieldMeasure
+  maxX?: FieldMeasure
+  minY?: FieldMeasure
+  maxY?: FieldMeasure
 }
 
 type DefaultsConfig = NonNullable<FormationConfig['defaults']>
@@ -47,6 +64,43 @@ export type ParsedFormationConfig = {
 const FORMATION_MODE_SET = new Set<string>(FORMATION_MODE_OPTIONS)
 const ADVERTISED_STATE_MODE_PATTERN =
   /^advertised__phase_[a-z_]+__state_[a-z_]+__set_play_[a-z_]+__kicking_(?:none|us|them)$/
+
+const FIELD_DIMENSION_KEYS = new Set([
+  'length',
+  'width',
+  'goalAreaLength',
+  'goalAreaWidth',
+  'penaltyAreaLength',
+  'penaltyAreaWidth',
+  'penaltyMarkDistance',
+  'centreCircleDiameter',
+  'cornerArcRadius',
+])
+
+const FIELD_POSITION_KEYS = new Set([
+  'centre_x',
+  'center_x',
+  'centre_y',
+  'center_y',
+  'field_min_x',
+  'field_max_x',
+  'field_min_y',
+  'field_max_y',
+  'left_goal_area_min_x',
+  'left_goal_area_max_x',
+  'right_goal_area_min_x',
+  'right_goal_area_max_x',
+  'goal_area_min_y',
+  'goal_area_max_y',
+  'left_penalty_area_min_x',
+  'left_penalty_area_max_x',
+  'right_penalty_area_min_x',
+  'right_penalty_area_max_x',
+  'penalty_area_min_y',
+  'penalty_area_max_y',
+  'left_penalty_mark_x',
+  'right_penalty_mark_x',
+])
 
 export function parseFormationConfig(
   input: string,
@@ -187,11 +241,12 @@ function parseRobotConfig(
     return undefined
   }
 
-  const offsetX = parseFiniteNumber(value.offset.x)
-  const offsetY = parseFiniteNumber(value.offset.y)
+  const offsetX = parseFieldMeasure(value.offset.x, `${path}.offset.x`, warnings)
+  const offsetY = parseFieldMeasure(value.offset.y, `${path}.offset.y`, warnings)
+
   if (offsetX === undefined || offsetY === undefined) {
     warnings.push(
-      `Ignoring ${path} because offset.x and offset.y must be finite.`,
+      `Ignoring ${path} because offset.x and offset.y must be valid field measures.`,
     )
     return undefined
   }
@@ -209,33 +264,10 @@ function parseRobotConfig(
     robotConfig.attraction = attraction
   }
 
-  const minX = parseOptionalFiniteNumber(value.minX)
-  if (value.minX !== undefined && minX === undefined) {
-    warnings.push(`Ignoring ${path}.minX because it is not finite.`)
-  } else if (minX !== undefined) {
-    robotConfig.minX = minX
-  }
-
-  const maxX = parseOptionalFiniteNumber(value.maxX)
-  if (value.maxX !== undefined && maxX === undefined) {
-    warnings.push(`Ignoring ${path}.maxX because it is not finite.`)
-  } else if (maxX !== undefined) {
-    robotConfig.maxX = maxX
-  }
-
-  const minY = parseOptionalFiniteNumber(value.minY)
-  if (value.minY !== undefined && minY === undefined) {
-    warnings.push(`Ignoring ${path}.minY because it is not finite.`)
-  } else if (minY !== undefined) {
-    robotConfig.minY = minY
-  }
-
-  const maxY = parseOptionalFiniteNumber(value.maxY)
-  if (value.maxY !== undefined && maxY === undefined) {
-    warnings.push(`Ignoring ${path}.maxY because it is not finite.`)
-  } else if (maxY !== undefined) {
-    robotConfig.maxY = maxY
-  }
+  parseLimitOnto(robotConfig, value, 'minX', path, warnings)
+  parseLimitOnto(robotConfig, value, 'maxX', path, warnings)
+  parseLimitOnto(robotConfig, value, 'minY', path, warnings)
+  parseLimitOnto(robotConfig, value, 'maxY', path, warnings)
 
   return robotConfig
 }
@@ -255,6 +287,7 @@ function parseDefaults(
   }
 
   const defaults: DefaultsConfig = {}
+
   const attraction = parseAttraction(
     value.attraction,
     `${path}.attraction`,
@@ -264,35 +297,144 @@ function parseDefaults(
     defaults.attraction = attraction
   }
 
-  const minX = parseOptionalFiniteNumber(value.minX)
-  if (value.minX !== undefined && minX === undefined) {
-    warnings.push(`Ignoring ${path}.minX because it is not finite.`)
-  } else if (minX !== undefined) {
-    defaults.minX = minX
-  }
-
-  const maxX = parseOptionalFiniteNumber(value.maxX)
-  if (value.maxX !== undefined && maxX === undefined) {
-    warnings.push(`Ignoring ${path}.maxX because it is not finite.`)
-  } else if (maxX !== undefined) {
-    defaults.maxX = maxX
-  }
-
-  const minY = parseOptionalFiniteNumber(value.minY)
-  if (value.minY !== undefined && minY === undefined) {
-    warnings.push(`Ignoring ${path}.minY because it is not finite.`)
-  } else if (minY !== undefined) {
-    defaults.minY = minY
-  }
-
-  const maxY = parseOptionalFiniteNumber(value.maxY)
-  if (value.maxY !== undefined && maxY === undefined) {
-    warnings.push(`Ignoring ${path}.maxY because it is not finite.`)
-  } else if (maxY !== undefined) {
-    defaults.maxY = maxY
-  }
+  parseLimitOnto(defaults, value, 'minX', path, warnings)
+  parseLimitOnto(defaults, value, 'maxX', path, warnings)
+  parseLimitOnto(defaults, value, 'minY', path, warnings)
+  parseLimitOnto(defaults, value, 'maxY', path, warnings)
 
   return Object.keys(defaults).length > 0 ? defaults : undefined
+}
+
+function parseLimitOnto<T extends Record<string, unknown>>(
+  target: T,
+  source: Record<string, unknown>,
+  key: 'minX' | 'maxX' | 'minY' | 'maxY',
+  path: string,
+  warnings: string[],
+): void {
+  if (source[key] === undefined) {
+    return
+  }
+
+  const parsed = parseFieldMeasure(source[key], `${path}.${key}`, warnings)
+  if (parsed === undefined) {
+    warnings.push(`Ignoring ${path}.${key} because it is not a valid field measure.`)
+    return
+  }
+
+  target[key] = parsed
+}
+
+function parseFieldMeasure(
+  value: unknown,
+  path: string,
+  warnings: string[],
+): FieldMeasure | undefined {
+  if (parseFiniteNumber(value) !== undefined) {
+    return value
+  }
+
+  if (!isRecord(value)) {
+    return undefined
+  }
+
+  if ('position' in value) {
+    if (typeof value.position !== 'string') {
+      warnings.push(`Ignoring ${path}.position because it is not a string.`)
+      return undefined
+    }
+
+    if (!FIELD_POSITION_KEYS.has(value.position)) {
+      warnings.push(`${path}.position "${value.position}" is not a known position key.`)
+    }
+
+    const result: FieldMeasure = { position: value.position }
+
+    if (value.offset !== undefined) {
+      const offset = parseFiniteNumber(value.offset)
+      if (offset === undefined) {
+        warnings.push(`Ignoring ${path}.offset because it is not finite.`)
+      } else {
+        result.offset = offset
+      }
+    }
+
+    return result
+  }
+
+  if ('op' in value) {
+    if (
+      value.op !== 'add' &&
+      value.op !== 'subtract' &&
+      value.op !== 'multiply' &&
+      value.op !== 'negate'
+    ) {
+      warnings.push(`Ignoring ${path}.op because it is not supported.`)
+      return undefined
+    }
+
+    if (!Array.isArray(value.terms)) {
+      warnings.push(`Ignoring ${path}.terms because it is not an array.`)
+      return undefined
+    }
+
+    const terms: FieldMeasure[] = []
+
+    for (const [index, term] of value.terms.entries()) {
+      const parsedTerm = parseFieldMeasure(term, `${path}.terms.${index}`, warnings)
+      if (parsedTerm === undefined) {
+        return undefined
+      }
+      terms.push(parsedTerm)
+    }
+
+    return { op: value.op, terms }
+  }
+
+  const fieldKey = typeof value.field === 'string' ? value.field : undefined
+  const featureKey = typeof value.feature === 'string' ? value.feature : undefined
+  const selectedKey = fieldKey ?? featureKey
+
+  if (!selectedKey) {
+    return undefined
+  }
+
+  if (!FIELD_DIMENSION_KEYS.has(selectedKey)) {
+    warnings.push(`${path} references unknown field dimension "${selectedKey}".`)
+  }
+
+  const result: {
+    field?: string
+    feature?: string
+    scale?: number
+    offset?: number
+  } = {}
+
+  if (fieldKey) {
+    result.field = fieldKey
+  } else if (featureKey) {
+    result.feature = featureKey
+  }
+
+  if (value.scale !== undefined) {
+    const scale = parseFiniteNumber(value.scale)
+    if (scale === undefined) {
+      warnings.push(`Ignoring ${path}.scale because it is not finite.`)
+    } else {
+      result.scale = scale
+    }
+  }
+
+  if (value.offset !== undefined) {
+    const offset = parseFiniteNumber(value.offset)
+    if (offset === undefined) {
+      warnings.push(`Ignoring ${path}.offset because it is not finite.`)
+    } else {
+      result.offset = offset
+    }
+  }
+
+  return result
 }
 
 function parseAttraction(
@@ -334,14 +476,6 @@ function parseAttraction(
 
 function parseFiniteNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined
-}
-
-function parseOptionalFiniteNumber(value: unknown): number | undefined {
-  if (value === undefined) {
-    return undefined
-  }
-
-  return parseFiniteNumber(value)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

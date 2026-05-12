@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import isfinite
+from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI
@@ -8,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
 from .compute import compute_positions
+
+
+FIELD_SIZES_PATH = Path(__file__).resolve().parents[2] / "src" / "config" / "field_sizes.json"
 
 
 class Vec2Model(BaseModel):
@@ -42,7 +46,7 @@ class AdvertisedGameControllerStateModel(BaseModel):
 
 class ComputePositionsRequest(BaseModel):
     version: Literal[1]
-    field: str
+    field: Literal["S", "M", "L"] = "M"
     gameControllerState: AdvertisedGameControllerStateModel
     advertisedStateMode: str = Field(min_length=1)
     legacyMode: str = Field(min_length=1)
@@ -94,6 +98,8 @@ def post_compute_positions(
         robot_ids=request.robotIds,
         active_players=request.activePlayers,
         formation=request.formation,
+        field_size=request.field,
+        field_sizes_path=FIELD_SIZES_PATH,
     )
 
     return ComputePositionsResponse(

@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "meta": {
+    "name": "Normal play 5 scalable",
+    "notes": "Scalable test formation. Old numeric values still work, but player 1 and several limits use field-size-relative expressions."
+  },
+  "defaults": {
+    "attraction": {
+      "x": 0.65,
+      "y": 0.55
+    },
+    "minX": {
+      "field": "length",
+      "scale": -0.45
+    },
+    "maxX": {
+      "field": "length",
+      "scale": 0.45
+    },
+    "minY": {
+      "field": "width",
+      "scale": -0.45
+    },
+    "maxY": {
+      "field": "width",
+      "scale": 0.45
+    }
+  },
+  "modes": {
+    "normal_play": {
+      "robots": {
+        "1": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.30
+            },
+            "y": 0.0
+          },
+          "attraction": {
+            "x": 0.3,
+            "y": 0.15
+          },
+          "minX": {
+            "position": "field_min_x"
+          },
+          "maxX": {
+            "position": "left_goal_area_max_x"
+          },
+          "minY": {
+            "position": "goal_area_min_y"
+          },
+          "maxY": {
+            "position": "goal_area_max_y"
+          }
+        },
+        "2": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.20
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.16
+            }
+          }
+        },
+        "3": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.20
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.16
+            }
+          }
+        },
+        "4": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.08
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.10
+            }
+          }
+        },
+        "5": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.05
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.10
+            }
+          },
+          "minX": {
+            "field": "length",
+            "scale": -0.16
+          }
+        }
+      }
+    },
+    "kickoff_us": {
+      "defaults": {
+        "attraction": {
+          "x": 0.35,
+          "y": 0.25
+        }
+      },
+      "robots": {
+        "1": {
+          "offset": {
+            "x": {
+              "position": "left_goal_area_max_x",
+              "offset": -0.2
+            },
+            "y": 0.0
+          },
+          "attraction": {
+            "x": 0.15,
+            "y": 0.1
+          },
+          "minX": {
+            "position": "field_min_x"
+          },
+          "maxX": {
+            "position": "left_goal_area_max_x"
+          },
+          "minY": {
+            "position": "goal_area_min_y"
+          },
+          "maxY": {
+            "position": "goal_area_max_y"
+          }
+        },
+        "2": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.18
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.13
+            }
+          }
+        },
+        "3": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.18
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.13
+            }
+          }
+        },
+        "4": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.07
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.06
+            }
+          },
+          "minX": {
+            "field": "length",
+            "scale": -0.10
+          }
+        },
+        "5": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.02
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.04
+            }
+          },
+          "minX": {
+            "field": "length",
+            "scale": -0.06
+          }
+        }
+      }
+    },
+    "kickoff_them": {
+      "defaults": {
+        "attraction": {
+          "x": 0.45,
+          "y": 0.3
+        },
+        "minX": {
+          "field": "length",
+          "scale": -0.45
+        }
+      },
+      "robots": {
+        "1": {
+          "offset": {
+            "x": {
+              "position": "left_goal_area_max_x",
+              "offset": -0.2
+            },
+            "y": 0.0
+          },
+          "attraction": {
+            "x": 0.12,
+            "y": 0.08
+          },
+          "minX": {
+            "position": "field_min_x"
+          },
+          "maxX": {
+            "position": "left_goal_area_max_x"
+          },
+          "minY": {
+            "position": "goal_area_min_y"
+          },
+          "maxY": {
+            "position": "goal_area_max_y"
+          }
+        },
+        "2": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.23
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.17
+            }
+          }
+        },
+        "3": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.23
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.17
+            }
+          }
+        },
+        "4": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.13
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.09
+            }
+          }
+        },
+        "5": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.13
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.09
+            }
+          }
+        }
+      }
+    }
+  }
+}

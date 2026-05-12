@@ -66,6 +66,47 @@ export interface FieldGeometry {
   cornerArcs: ArcShape[]
 }
 
+export type FieldPositionName =
+  | 'centre_x'
+  | 'center_x'
+  | 'centre_y'
+  | 'center_y'
+  | 'field_min_x'
+  | 'field_max_x'
+  | 'field_min_y'
+  | 'field_max_y'
+  | 'left_goal_area_min_x'
+  | 'left_goal_area_max_x'
+  | 'right_goal_area_min_x'
+  | 'right_goal_area_max_x'
+  | 'goal_area_min_y'
+  | 'goal_area_max_y'
+  | 'left_penalty_area_min_x'
+  | 'left_penalty_area_max_x'
+  | 'right_penalty_area_min_x'
+  | 'right_penalty_area_max_x'
+  | 'penalty_area_min_y'
+  | 'penalty_area_max_y'
+  | 'left_penalty_mark_x'
+  | 'right_penalty_mark_x'
+
+export type FieldMeasure =
+  | number
+  | {
+      field?: keyof FieldDimensions
+      feature?: keyof FieldDimensions
+      scale?: number
+      offset?: number
+    }
+  | {
+      position: FieldPositionName
+      offset?: number
+    }
+  | {
+      op: 'add' | 'subtract' | 'multiply' | 'negate'
+      terms: FieldMeasure[]
+    }
+
 export const FIELD_SIZE_OPTIONS = Object.keys(fieldSizes) as FieldSize[]
 
 export const ROBOT_RADIUS_METRES = 0.18
@@ -78,6 +119,118 @@ const fieldSizeTable = fieldSizes as Record<FieldSize, FieldDimensions>
 
 export function getFieldDimensions(field: FieldSize): FieldDimensions {
   return fieldSizeTable[field]
+}
+
+export function computeFieldPosition(
+  value: unknown,
+  dimensions: FieldDimensions,
+  fallback?: number,
+): number | undefined {
+  const resolved = resolveMeasure(value, dimensions)
+  return resolved ?? fallback
+}
+
+function resolveMeasure(
+  value: unknown,
+  dimensions: FieldDimensions,
+): number | undefined {
+  if (isFiniteNumber(value)) {
+    return value
+  }
+
+  if (!isRecord(value)) {
+    return undefined
+  }
+
+  if (typeof value.position === 'string') {
+    const base = resolveNamedPosition(value.position, dimensions)
+    if (base === undefined) {
+      return undefined
+    }
+
+    return base + (isFiniteNumber(value.offset) ? value.offset : 0)
+  }
+
+  if (typeof value.op === 'string') {
+    if (!Array.isArray(value.terms)) {
+      return undefined
+    }
+
+    const terms = value.terms.map((term) => resolveMeasure(term, dimensions))
+    if (terms.some((term) => term === undefined)) {
+      return undefined
+    }
+
+    const numbers = terms.filter((term): term is number => term !== undefined)
+
+    if (value.op === 'add') {
+      return numbers.reduce((sum, number) => sum + number, 0)
+    }
+
+    if (value.op === 'subtract' && numbers.length > 0) {
+      return numbers.slice(1).reduce((result, number) => result - number, numbers[0])
+    }
+
+    if (value.op === 'multiply') {
+      return numbers.reduce((result, number) => result * number, 1)
+    }
+
+    if (value.op === 'negate' && numbers.length === 1) {
+      return -numbers[0]
+    }
+
+    return undefined
+  }
+
+  const key = typeof value.field === 'string' ? value.field : value.feature
+  if (typeof key !== 'string' || !(key in dimensions)) {
+    return undefined
+  }
+
+  const base = dimensions[key as keyof FieldDimensions]
+  const scale = isFiniteNumber(value.scale) ? value.scale : 1
+  const offset = isFiniteNumber(value.offset) ? value.offset : 0
+
+  return base * scale + offset
+}
+
+function resolveNamedPosition(
+  name: string,
+  dimensions: FieldDimensions,
+): number | undefined {
+  const bounds = getFieldBounds(dimensions)
+
+  const positions: Record<string, number> = {
+    centre_x: 0,
+    center_x: 0,
+    centre_y: 0,
+    center_y: 0,
+    field_min_x: bounds.minX,
+    field_max_x: bounds.maxX,
+    field_min_y: bounds.minY,
+    field_max_y: bounds.maxY,
+
+    left_goal_area_min_x: bounds.minX,
+    left_goal_area_max_x: bounds.minX + dimensions.goalAreaLength,
+    right_goal_area_min_x: bounds.maxX - dimensions.goalAreaLength,
+    right_goal_area_max_x: bounds.maxX,
+
+    goal_area_min_y: -dimensions.goalAreaWidth / 2,
+    goal_area_max_y: dimensions.goalAreaWidth / 2,
+
+    left_penalty_area_min_x: bounds.minX,
+    left_penalty_area_max_x: bounds.minX + dimensions.penaltyAreaLength,
+    right_penalty_area_min_x: bounds.maxX - dimensions.penaltyAreaLength,
+    right_penalty_area_max_x: bounds.maxX,
+
+    penalty_area_min_y: -dimensions.penaltyAreaWidth / 2,
+    penalty_area_max_y: dimensions.penaltyAreaWidth / 2,
+
+    left_penalty_mark_x: bounds.minX + dimensions.penaltyMarkDistance,
+    right_penalty_mark_x: bounds.maxX - dimensions.penaltyMarkDistance,
+  }
+
+  return positions[name]
 }
 
 export function getFieldBounds(dimensions: FieldDimensions): Bounds {
@@ -266,4 +419,12 @@ export function sampleArc(arc: ArcShape, segments = 18): Vec2[] {
 
 function clampNumber(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
