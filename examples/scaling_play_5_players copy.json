@@ -520,6 +520,217 @@
           }
         }
       }
+    },
+    "corner_kick_us": {
+      "robots": {
+        "1": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.3
+            },
+            "y": 0.0
+          },
+          "attraction": {
+            "x": 0.45,
+            "y": 1.0
+          },
+          "minX": {
+            "position": "field_min_x"
+          },
+          "maxX": {
+            "position": "left_goal_area_max_x"
+          },
+          "minY": {
+            "position": "goal_area_min_y"
+          },
+          "maxY": {
+            "position": "goal_area_max_y"
+          }
+        },
+        "2": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.02
+            },
+            "y": 0.0
+          },
+          "attraction": {
+            "x": 1.05,
+            "y": 1.05
+          },
+          "minX": {
+            "position": "field_min_x",
+            "offset": -0.25
+          },
+          "maxX": {
+            "position": "field_max_x",
+            "offset": 0.25
+          },
+          "minY": {
+            "position": "field_min_y",
+            "offset": -0.25
+          },
+          "maxY": {
+            "position": "field_max_y",
+            "offset": 0.25
+          }
+        },
+        "3": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.13
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.16
+            }
+          },
+          "attraction": {
+            "x": 0.35,
+            "y": 0.55
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
+          }
+        },
+        "4": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.08
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.1
+            }
+          },
+          "attraction": {
+            "x": 0.9,
+            "y": 0.55
+          },
+          "minX": {
+            "field": "length",
+            "scale": -0.3
+          }
+        },
+        "5": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.05
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.1
+            }
+          },
+          "minX": {
+            "field": "length",
+            "scale": -0.05
+          }
+        }
+      }
+    },
+    "corner_kick_them": {
+      "robots": {
+        "1": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.3
+            },
+            "y": 0.0
+          },
+          "attraction": {
+            "x": 0.45,
+            "y": 1.0
+          },
+          "minX": {
+            "position": "field_min_x"
+          },
+          "maxX": {
+            "position": "left_goal_area_max_x"
+          },
+          "minY": {
+            "position": "goal_area_min_y"
+          },
+          "maxY": {
+            "position": "goal_area_max_y"
+          }
+        },
+        "2": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.2
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.16
+            }
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
+          }
+        },
+        "3": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.2
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.16
+            }
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
+          }
+        },
+        "4": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.08
+            },
+            "y": {
+              "field": "width",
+              "scale": 0.1
+            }
+          },
+          "attraction": {
+            "x": 0.7,
+            "y": 0.65
+          }
+        },
+        "5": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.05
+            },
+            "y": {
+              "field": "width",
+              "scale": -0.1
+            }
+          },
+          "attraction": {
+            "x": 0.7,
+            "y": 0.65
+          },
+          "minX": {
+            "field": "length",
+            "scale": -0.16
+          }
+        }
+      }
     }
   }
 }
