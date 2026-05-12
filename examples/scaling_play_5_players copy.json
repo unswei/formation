@@ -2,7 +2,7 @@
   "version": 1,
   "meta": {
     "name": "Normal play 5 scalable",
-    "notes": "Scalable test formation. Old numeric values still work, but player 1 and several limits use field-size-relative expressions."
+    "notes": "Scalable test formation. Player 1 tracks ball y within goal-area bounds. Players 2 and 3 are constrained to stay in the defensive quarter."
   },
   "defaults": {
     "attraction": {
@@ -33,13 +33,13 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.30
+              "scale": -0.3
             },
             "y": 0.0
           },
           "attraction": {
             "x": 0.3,
-            "y": 0.15
+            "y": 1.0
           },
           "minX": {
             "position": "field_min_x"
@@ -58,24 +58,32 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.20
+              "scale": -0.2
             },
             "y": {
               "field": "width",
               "scale": 0.16
             }
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
           }
         },
         "3": {
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.20
+              "scale": -0.2
             },
             "y": {
               "field": "width",
               "scale": -0.16
             }
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
           }
         },
         "4": {
@@ -86,7 +94,7 @@
             },
             "y": {
               "field": "width",
-              "scale": 0.10
+              "scale": 0.1
             }
           }
         },
@@ -98,7 +106,7 @@
             },
             "y": {
               "field": "width",
-              "scale": -0.10
+              "scale": -0.1
             }
           },
           "minX": {
@@ -126,7 +134,7 @@
           },
           "attraction": {
             "x": 0.15,
-            "y": 0.1
+            "y": 1.0
           },
           "minX": {
             "position": "field_min_x"
@@ -151,6 +159,10 @@
               "field": "width",
               "scale": 0.13
             }
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
           }
         },
         "3": {
@@ -163,6 +175,10 @@
               "field": "width",
               "scale": -0.13
             }
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
           }
         },
         "4": {
@@ -178,7 +194,7 @@
           },
           "minX": {
             "field": "length",
-            "scale": -0.10
+            "scale": -0.1
           }
         },
         "5": {
@@ -221,7 +237,7 @@
           },
           "attraction": {
             "x": 0.12,
-            "y": 0.08
+            "y": 1.0
           },
           "minX": {
             "position": "field_min_x"
@@ -246,6 +262,10 @@
               "field": "width",
               "scale": 0.17
             }
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
           }
         },
         "3": {
@@ -258,6 +278,10 @@
               "field": "width",
               "scale": -0.17
             }
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.15
           }
         },
         "4": {
