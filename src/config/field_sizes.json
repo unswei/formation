@@ -2,9 +2,9 @@
   "S": {
     "length": 9,
     "width": 6,
-    "goalAreaLength": 1,
-    "goalAreaWidth": 3,
-    "penaltyAreaLength": 2,
+    "goalAreaLength": 0.6,
+    "goalAreaWidth": 2.2,
+    "penaltyAreaLength": 1.65,
     "penaltyAreaWidth": 4,
     "penaltyMarkDistance": 1.5,
     "centreCircleDiameter": 1.5,

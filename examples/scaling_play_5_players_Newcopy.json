@@ -67,7 +67,7 @@
           },
           "maxX": {
             "field": "length",
-            "scale": -0.25
+            "scale": -0.1
           },
           "maxY": {
             "field": "width",
@@ -95,7 +95,7 @@
           },
           "maxX": {
             "field": "length",
-            "scale": -0.25
+            "scale": -0.1
           },
           "maxY": {
             "field": "width",
@@ -103,7 +103,7 @@
           },
           "minX": {
             "field": "length",
-            "scale": -0.39
+            "scale": -0.45
           },
           "minY": {
             "field": "width",
