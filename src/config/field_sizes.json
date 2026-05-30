@@ -11,14 +11,14 @@
     "cornerArcRadius": 0
   },
   "M": {
-    "length": 14,
-    "width": 9,
-    "goalAreaLength": 1,
-    "goalAreaWidth": 4,
-    "penaltyAreaLength": 3,
-    "penaltyAreaWidth": 6,
+    "length": 6.8,
+    "width": 5,
+    "goalAreaLength": 1.05,
+    "goalAreaWidth": 2.62,
+    "penaltyAreaLength": 1.55,
+    "penaltyAreaWidth": 4.05,
     "penaltyMarkDistance": 2,
-    "centreCircleDiameter": 3,
+    "centreCircleDiameter": 1.5,
     "cornerArcRadius": 0.5
   },
   "L": {
