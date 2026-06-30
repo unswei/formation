@@ -58,56 +58,31 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.2
-            },
-            "y": 0.0
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.1
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.4
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.39
-          },
-          "minY": {
-            "field": "width",
-            "scale": -0.2
-          }
-        },
-        "3": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.2
+              "scale": 0.0
             },
             "y": {
               "field": "width",
-              "scale": -0.11
+              "scale": -0.3
             }
           },
-          "maxX": {
-            "field": "length",
-            "scale": -0.1
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.2
+          "attraction": {
+            "x": 1.0,
+            "y": 0.4
           },
           "minX": {
             "field": "length",
-            "scale": -0.45
+            "scale": -0.16
           },
-          "minY": {
+          "maxX": {
+            "field": "length",
+            "scale": 0.3
+          },
+          "maxY": {
             "field": "width",
-            "scale": -0.4
+            "scale": 0.35
           }
         },
-        "4": {
+        "3": {
           "offset": {
             "x": {
               "field": "length",
@@ -133,34 +108,6 @@
           "minY": {
             "field": "width",
             "scale": -0.35
-          }
-        },
-        "5": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": 0.0
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.3
-            }
-          },
-          "attraction": {
-            "x": 1.0,
-            "y": 0.4
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.16
-          },
-          "maxX": {
-            "field": "length",
-            "scale": 0.3
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.35
           }
         }
       }
@@ -202,59 +149,27 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.2
+              "scale": -0.05
             },
             "y": {
               "field": "width",
-              "scale": 0.11
+              "scale": -0.1
             }
           },
-          "maxX": {
+          "minX": {
             "field": "length",
-            "scale": -0.25
+            "scale": -0.16
           },
           "maxY": {
             "field": "width",
             "scale": 0.2
           },
-          "minX": {
-            "field": "length",
-            "scale": -0.39
-          },
           "minY": {
             "field": "width",
-            "scale": -0.1
+            "scale": -0.35
           }
         },
         "3": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.11
-            }
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.25
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.1
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.39
-          },
-          "minY": {
-            "field": "width",
-            "scale": -0.2
-          }
-        },
-        "4": {
           "offset": {
             "x": {
               "field": "length",
@@ -276,30 +191,6 @@
           "minY": {
             "field": "width",
             "scale": -0.2
-          }
-        },
-        "5": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.05
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.1
-            }
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.16
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.2
-          },
-          "minY": {
-            "field": "width",
-            "scale": -0.35
           }
         }
       }
@@ -345,28 +236,12 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.2
+              "scale": -0.13
             },
             "y": {
               "field": "width",
-              "scale": 0.11
+              "scale": -0.12
             }
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.25
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.2
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.39
-          },
-          "minY": {
-            "field": "width",
-            "scale": -0.1
           }
         },
         "3": {
@@ -377,47 +252,7 @@
             },
             "y": {
               "field": "width",
-              "scale": -0.11
-            }
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.25
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.1
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.39
-          },
-          "minY": {
-            "field": "width",
-            "scale": -0.2
-          }
-        },
-        "4": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.13
-            },
-            "y": {
-              "field": "width",
-              "scale": 0.12
-            }
-          }
-        },
-        "5": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.13
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.12
+              "scale": 0.0
             }
           }
         }
@@ -454,62 +289,6 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": 0.11
-            }
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.25
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.35
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.39
-          },
-          "minY": {
-            "field": "width",
-            "scale": -0.1
-          }
-        },
-        "3": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.11
-            }
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.25
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.1
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.39
-          },
-          "minY": {
-            "field": "width",
-            "scale": -0.35
-          }
-        },
-        "4": {
-          "offset": {
-            "x": {
-              "field": "length",
               "scale": 0.08
             },
             "y": {
@@ -530,7 +309,7 @@
             "scale": -0.2
           }
         },
-        "5": {
+        "3": {
           "offset": {
             "x": {
               "field": "length",
@@ -587,46 +366,6 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": 0.16
-            }
-          },
-          "attraction": {
-            "x": 0.65,
-            "y": 0.3
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.15
-          }
-        },
-        "3": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.16
-            }
-          },
-          "attraction": {
-            "x": 0.65,
-            "y": 0.3
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.15
-          }
-        },
-        "4": {
-          "offset": {
-            "x": {
-              "field": "length",
               "scale": -0.08
             },
             "y": {
@@ -643,7 +382,7 @@
             "scale": -0.37
           }
         },
-        "5": {
+        "3": {
           "offset": {
             "x": {
               "field": "length",
@@ -696,55 +435,6 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.02
-            },
-            "y": 0.0
-          },
-          "attraction": {
-            "x": 1.05,
-            "y": 1.05
-          },
-          "minX": {
-            "position": "field_min_x",
-            "offset": -0.25
-          },
-          "maxX": {
-            "position": "field_max_x",
-            "offset": 0.25
-          },
-          "minY": {
-            "position": "field_min_y",
-            "offset": -0.25
-          },
-          "maxY": {
-            "position": "field_max_y",
-            "offset": 0.25
-          }
-        },
-        "3": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.13
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.16
-            }
-          },
-          "attraction": {
-            "x": 0.35,
-            "y": 0.55
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.15
-          }
-        },
-        "4": {
-          "offset": {
-            "x": {
-              "field": "length",
               "scale": -0.08
             },
             "y": {
@@ -761,7 +451,7 @@
             "scale": -0.3
           }
         },
-        "5": {
+        "3": {
           "offset": {
             "x": {
               "field": "length",
@@ -810,42 +500,6 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.08
-            },
-            "y": {
-              "field": "width",
-              "scale": 0.1
-            }
-          },
-          "attraction": {
-            "x": 0.6,
-            "y": 0.55
-          }
-        },
-        "3": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.08
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.1
-            }
-          },
-          "minY": {
-            "field": "length",
-            "scale": -0.25
-          },
-          "attraction": {
-            "x": 0.6,
-            "y": 0.55
-          }
-        },
-        "4": {
-          "offset": {
-            "x": {
-              "field": "length",
               "scale": -0.2
             },
             "y": {
@@ -866,7 +520,7 @@
             "scale": 0.25
           }
         },
-        "5": {
+        "3": {
           "offset": {
             "x": {
               "field": "length",
@@ -919,38 +573,6 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": 0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": 0.05
-            }
-          },
-          "maxX": {
-            "field": "length",
-            "scale": 0.27
-          }
-        },
-        "3": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.16
-            }
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.15
-          }
-        },
-        "4": {
-          "offset": {
-            "x": {
-              "field": "length",
               "scale": -0.08
             },
             "y": {
@@ -963,7 +585,7 @@
             "y": 0.65
           }
         },
-        "5": {
+        "3": {
           "offset": {
             "x": {
               "field": "length",
@@ -1016,38 +638,6 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": 0.19
-            }
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.25
-          }
-        },
-        "3": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.2
-            },
-            "y": {
-              "field": "width",
-              "scale": -0.19
-            }
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.25
-          }
-        },
-        "4": {
-          "offset": {
-            "x": {
-              "field": "length",
               "scale": -0.08
             },
             "y": {
@@ -1064,7 +654,7 @@
             "scale": -0.17
           }
         },
-        "5": {
+        "3": {
           "offset": {
             "x": {
               "field": "length",
