@@ -236,11 +236,11 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.13
+              "scale": -0.2
             },
             "y": {
               "field": "width",
-              "scale": -0.12
+              "scale": 0.0
             }
           }
         },
@@ -248,11 +248,11 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.2
+              "scale": -0.1
             },
             "y": {
               "field": "width",
-              "scale": 0.0
+              "scale": 0.20
             }
           }
         }
