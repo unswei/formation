@@ -877,8 +877,8 @@
             "y": 0.0
           },
           "attraction": {
-            "x": 0.1,
-            "y": 0.55
+            "x": 0.08,
+            "y": 0.45
           },
           "minX": {
             "position": "field_min_x"
@@ -897,61 +897,56 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.08
+              "scale": -0.11
             },
-            "y": 0.0
+            "y": 0.13
           },
           "attraction": {
-            "x": 0.55,
-            "y": 0.5
+            "x": 0.8,
+            "y": 0.8
           },
           "minX": {
-            "field": "length",
-            "scale": -0.36
+            "position": "field_min_x"
           },
           "maxX": {
             "field": "length",
-            "scale": 0.08
+            "scale": 0.44
           },
           "minY": {
             "field": "width",
-            "scale": -0.35
+            "scale": -0.4
           },
           "maxY": {
             "field": "width",
-            "scale": 0.35
+            "scale": 0.4
           }
         },
         "3": {
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.2
+              "scale": -0.05
             },
-            "y": {
-              "field": "width",
-              "scale": -0.12
-            }
+            "y": -0.05
           },
           "attraction": {
-            "x": 0.2,
-            "y": 0.2
+            "x": 0.8,
+            "y": 0.8
           },
           "minX": {
-            "field": "length",
-            "scale": -0.42
+            "position": "field_min_x"
           },
           "maxX": {
             "field": "length",
-            "scale": -0.06
+            "scale": 0.44
           },
           "minY": {
             "field": "width",
-            "scale": -0.3
+            "scale": -0.4
           },
           "maxY": {
             "field": "width",
-            "scale": 0.14
+            "scale": 0.4
           }
         }
       }
@@ -1080,64 +1075,58 @@
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.06
+              "scale": -0.05
             },
-            "y": {
-              "field": "width",
-              "scale": -0.12
-            }
+            "y": -0.01
           },
           "attraction": {
-            "x": 0.35,
-            "y": 0.2
+            "x": 0.8,
+            "y": 0.8
           },
           "minX": {
             "field": "length",
-            "scale": -0.18
+            "scale": -0.1
           },
           "maxX": {
             "field": "length",
-            "scale": 0.2
+            "scale": 0.44
           },
           "minY": {
             "field": "width",
-            "scale": -0.3
+            "scale": -0.4
           },
           "maxY": {
             "field": "width",
-            "scale": 0.06
+            "scale": 0.4
           }
         },
         "3": {
           "offset": {
             "x": {
               "field": "length",
-              "scale": -0.22
+              "scale": -0.11
             },
-            "y": {
-              "field": "width",
-              "scale": 0.08
-            }
+            "y": 0.11
           },
           "attraction": {
-            "x": 0.15,
-            "y": 0.15
+            "x": 0.8,
+            "y": 0.8
           },
           "minX": {
             "field": "length",
-            "scale": -0.38
+            "scale": -0.1
           },
           "maxX": {
             "field": "length",
-            "scale": -0.06
+            "scale": 0.44
           },
           "minY": {
             "field": "width",
-            "scale": -0.08
+            "scale": -0.4
           },
           "maxY": {
             "field": "width",
-            "scale": 0.28
+            "scale": 0.4
           }
         }
       }
@@ -1237,8 +1226,8 @@
         "1": {
           "offset": {
             "x": {
-              "position": "left_goal_area_max_x",
-              "offset": -0.2
+              "position": "left_goal_area_min_x",
+              "offset": 0.5
             },
             "y": 0.0
           },
@@ -1253,42 +1242,15 @@
             "position": "left_goal_area_max_x"
           },
           "minY": {
-            "position": "goal_area_min_y"
+            "position": "goal_area_min_y",
+            "offset": -0.2
           },
           "maxY": {
-            "position": "goal_area_max_y"
+            "position": "goal_area_max_y",
+            "offset": 0.2
           }
         },
         "2": {
-          "offset": {
-            "x": {
-              "field": "length",
-              "scale": -0.28
-            },
-            "y": 0.0
-          },
-          "attraction": {
-            "x": 0.2,
-            "y": 0.45
-          },
-          "minX": {
-            "field": "length",
-            "scale": -0.45
-          },
-          "maxX": {
-            "field": "length",
-            "scale": -0.14
-          },
-          "minY": {
-            "field": "width",
-            "scale": -0.34
-          },
-          "maxY": {
-            "field": "width",
-            "scale": 0.34
-          }
-        },
-        "3": {
           "offset": {
             "x": {
               "field": "length",
@@ -1318,6 +1280,35 @@
           "maxY": {
             "field": "width",
             "scale": 0.14
+          }
+        },
+        "3": {
+          "offset": {
+            "x": {
+              "field": "length",
+              "scale": -0.3
+            },
+            "y": 0.0
+          },
+          "attraction": {
+            "x": 0.2,
+            "y": 0.45
+          },
+          "minX": {
+            "field": "length",
+            "scale": -0.45
+          },
+          "maxX": {
+            "field": "length",
+            "scale": -0.14
+          },
+          "minY": {
+            "field": "width",
+            "scale": -0.34
+          },
+          "maxY": {
+            "field": "width",
+            "scale": 0.34
           }
         }
       }
