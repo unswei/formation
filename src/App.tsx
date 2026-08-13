@@ -169,6 +169,73 @@ function App() {
     resolvedMode.legacyMode,
   ])
 
+  useEffect(() => {
+    let socket: WebSocket | null = null
+    let reconnectTimeoutId: number | null = null
+    let isCleanup = false
+
+    function connect() {
+      if (isCleanup) return
+
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const host = window.location.host
+      const url = `${protocol}//${host}/api/gamecontroller/ws`
+
+      socket = new WebSocket(url)
+
+      socket.onmessage = (event) => {
+        try {
+          const received = JSON.parse(event.data)
+          if (received && typeof received === 'object') {
+            setGameControllerState((prev) => {
+              const teamNumbers = Array.isArray(received.teamNumbers) ? received.teamNumbers : []
+              const ownTeamNumber =
+                prev.ownTeamNumber === 0 || !teamNumbers.includes(prev.ownTeamNumber)
+                  ? (teamNumbers[0] ?? prev.ownTeamNumber)
+                  : prev.ownTeamNumber
+
+              return {
+                ...prev,
+                gamePhase: received.gamePhase ?? prev.gamePhase,
+                state: received.state ?? prev.state,
+                setPlay: received.setPlay ?? prev.setPlay,
+                firstHalf: typeof received.firstHalf === 'boolean' ? received.firstHalf : prev.firstHalf,
+                stopped: typeof received.stopped === 'boolean' ? received.stopped : prev.stopped,
+                kickingTeam: received.kickingTeam !== undefined ? received.kickingTeam : prev.kickingTeam,
+                ownTeamNumber,
+              }
+            })
+          }
+        } catch (err) {
+          console.error('Failed to parse GameController websocket message:', err)
+        }
+      }
+
+      socket.onclose = () => {
+        if (!isCleanup) {
+          reconnectTimeoutId = window.setTimeout(connect, 3000)
+        }
+      }
+
+      socket.onerror = () => {
+        socket?.close()
+      }
+    }
+
+    connect()
+
+    return () => {
+      isCleanup = true
+      if (socket) {
+        socket.close()
+      }
+      if (reconnectTimeoutId !== null) {
+        window.clearTimeout(reconnectTimeoutId)
+      }
+    }
+  }, [])
+
+
   const selectedRobotLimits =
     appMode === 'record'
       ? getPlayerLimits(recordingDraft, activeModeKey, selectedRobotId, dimensions)

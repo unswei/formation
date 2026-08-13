@@ -1,11 +1,27 @@
-from __future__ import annotations
-
+import struct
 import unittest
 
 from app.compute import compute_positions
+from app.main import parse_gc_data
 
 
 class ComputePositionsTests(unittest.TestCase):
+    def test_parse_gc_data(self) -> None:
+        header = struct.pack("<4sBBBBBBBBBBhh", b"RGme", 20, 0, 5, 0, 0, 0, 3, 0, 1, 7, 300, 10)
+        team1 = struct.pack("<BBBBBBHH60s", 7, 0, 0, 0, 2, 0, 0, 0, b"\x00" * 60)
+        team2 = struct.pack("<BBBBBBHH60s", 8, 0, 0, 0, 1, 0, 0, 0, b"\x00" * 60)
+        
+        packet = header + team1 + team2
+        parsed = parse_gc_data(packet)
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed["gamePhase"], "normal")
+        self.assertEqual(parsed["state"], "playing")
+        self.assertEqual(parsed["setPlay"], "none")
+        self.assertEqual(parsed["firstHalf"], True)
+        self.assertEqual(parsed["stopped"], False)
+        self.assertEqual(parsed["kickingTeam"], 7)
+        self.assertEqual(parsed["teamNumbers"], [7, 8])
+
     def test_exact_key_precedes_legacy_mode(self) -> None:
         positions, warnings = compute_positions(
             game_controller_state={
