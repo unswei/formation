@@ -1,0 +1,64 @@
+{
+  "defaults": {},
+  "meta": {
+    "name": "Recorded formation"
+  },
+  "modes": {
+    "advertised__phase_normal__state_playing__set_play_none__kicking_none": {
+      "robots": {}
+    },
+    "advertised__phase_normal__state_ready__set_play_direct_free_kick__kicking_none": {
+      "robots": {}
+    },
+    "advertised__phase_normal__state_ready__set_play_none__kicking_none": {
+      "robots": {}
+    },
+    "advertised__phase_normal__state_ready__set_play_none__kicking_us": {
+      "robots": {
+        "1": {
+          "attraction": {
+            "x": -0.1698,
+            "y": 0.5788
+          },
+          "maxX": 0.0124,
+          "maxY": 1.3169,
+          "minX": -3.4,
+          "minY": -1.3137,
+          "offset": {
+            "x": -2.9675,
+            "y": -0.0378
+          }
+        },
+        "2": {
+          "attraction": {
+            "x": -0.0041,
+            "y": -0.1931
+          },
+          "maxX": 0.0371,
+          "maxY": 2.0417,
+          "minX": -1.845,
+          "minY": -2.0615,
+          "offset": {
+            "x": -0.3228,
+            "y": -0.1334
+          }
+        },
+        "3": {
+          "attraction": {
+            "x": 0.0159,
+            "y": 0.5997
+          },
+          "maxX": 0.0753,
+          "maxY": 2.0657,
+          "minX": -2.3384,
+          "minY": -2.0518,
+          "offset": {
+            "x": -1.364,
+            "y": 0.6752
+          }
+        }
+      }
+    }
+  },
+  "version": 1
+}

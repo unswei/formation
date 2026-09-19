@@ -1,0 +1,55 @@
+{
+  "defaults": {},
+  "meta": {
+    "name": "Recorded formation"
+  },
+  "modes": {
+    "advertised__phase_normal__state_playing__set_play_none__kicking_none": {
+      "robots": {
+        "1": {
+          "attraction": {
+            "x": 0.1935,
+            "y": 0.4916
+          },
+          "maxX": -0.0402,
+          "maxY": 1.3696,
+          "minX": -3.4,
+          "minY": -1.3574,
+          "offset": {
+            "x": -2.578,
+            "y": 0.0947
+          }
+        },
+        "2": {
+          "attraction": {
+            "x": 0.5742,
+            "y": 0.5229
+          },
+          "maxX": 2.1404,
+          "maxY": 2.2371,
+          "minX": -3.1565,
+          "minY": -2.2735,
+          "offset": {
+            "x": -1.2032,
+            "y": -0.8022
+          }
+        },
+        "3": {
+          "attraction": {
+            "x": 0.7146,
+            "y": 0.2121
+          },
+          "maxX": 3.3335,
+          "maxY": 2.5,
+          "minX": -1.8496,
+          "minY": -2.5,
+          "offset": {
+            "x": 0.513,
+            "y": 1.6776
+          }
+        }
+      }
+    }
+  },
+  "version": 1
+}
