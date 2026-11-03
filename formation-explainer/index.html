@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="colour-scheme" content="light" />
+    <title>Formation → behaviour · 5 v 5</title>
+    <link rel="stylesheet" href="guide.css" />
+    <script src="guide-data.js" defer></script>
+    <script src="guide.js" defer></script>
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="brand" href="#diamond">Formation <span>→</span> behaviour</a>
+      <span class="edition">5 v 5 / VISUAL GUIDE</span>
+      <button id="view-all" class="quiet" type="button" aria-pressed="false">All pages</button>
+    </header>
+    <div class="layout">
+      <nav id="chapters" aria-label="Explanation chapters"></nav>
+      <main>
+        <div id="static-pages"></div>
+        <section id="try-it" class="page live-page" hidden aria-labelledby="live-title">
+          <div class="live-heading">
+            <p class="eyebrow">FORMATION / 5 v 5</p>
+            <h1 id="live-title">Move the ball. Watch the targets.</h1>
+            <p>Drag the ball, or animate it.</p>
+          </div>
+          <div class="live-layout">
+            <svg id="live-pitch" viewBox="0 0 1020 760" role="img" aria-label="Five blue formation targets and five orange opponents. Drag the black ball to recalculate targets.">
+              <title>Interactive five versus five formation</title>
+              <rect x="60" y="65" width="900" height="600" fill="#e8eee4" />
+              <g fill="none" stroke="#b8c9b8" stroke-width="2">
+                <rect x="60" y="65" width="900" height="600" />
+                <path d="M510,65V665 M60,215H160V515H60 M960,215H860V515H960 M60,285H35V445H60 M960,285H985V445H960" />
+                <circle cx="510" cy="365" r="75" />
+              </g>
+              <circle cx="510" cy="365" r="3" fill="#b8c9b8" />
+              <path id="live-shape" fill="none" stroke="#1768ad" stroke-width="2" stroke-dasharray="7 8" opacity="0.35" />
+              <g id="live-limits" fill="none" stroke="#c56330" stroke-width="2" stroke-dasharray="6 6" visibility="hidden"></g>
+              <g id="live-opponents"></g>
+              <g id="live-targets"></g>
+              <g id="live-ball" transform="translate(510 365)" aria-hidden="true">
+                <circle r="29" fill="transparent" />
+                <circle r="9" fill="#203c3b" stroke="#f7f6ef" stroke-width="3" />
+              </g>
+              <text x="60" y="715" class="pitch-label">Own goal</text>
+              <text x="960" y="715" class="pitch-label" text-anchor="end">Attack →</text>
+            </svg>
+            <aside class="live-controls" aria-label="Ball and formation controls">
+              <label class="control-label" for="mode">Game state</label>
+              <select id="mode">
+                <option value="normal_play">Playing</option>
+                <option value="kickoff_us">Ready · our kick-off</option>
+                <option value="kickoff_them">Ready · their kick-off</option>
+              </select>
+              <code id="mode-name">normal_play</code>
+              <div class="slider-heading"><label for="ball-x">Ball x</label><output id="x-value" for="ball-x">0.00 m</output></div>
+              <input id="ball-x" type="range" min="-4.5" max="4.5" step="0.01" value="0" />
+              <div class="slider-heading"><label for="ball-y">Ball y</label><output id="y-value" for="ball-y">0.00 m</output></div>
+              <input id="ball-y" type="range" min="-3" max="3" step="0.01" value="0" />
+              <button id="animate" class="primary" type="button" aria-pressed="false">Animate targets</button>
+              <label class="checkbox"><input id="show-limits" type="checkbox" /> Forward’s limits</label>
+              <div class="forward-result"><span>5 · Forward target</span><output id="target-value">(1.00, 0.00) m</output><span id="clip-state">Inside limits</span></div>
+              <p class="legend"><span class="dot blue"></span> Us <span class="dot orange"></span> Them <span class="dot ball"></span> Ball</p>
+            </aside>
+          </div>
+          <p class="live-footnote">Computed targets, not walking paths. Opponents stay fixed and are not inputs.</p>
+        </section>
+        <footer class="pager">
+          <button id="previous" class="quiet" type="button" aria-label="Previous page">← Previous</button>
+          <span id="page-count" aria-live="polite">1 / 10</span>
+          <button id="next" class="quiet" type="button" aria-label="Next page">Next →</button>
+        </footer>
+      </main>
+    </div>
+    <footer class="resource-links">
+      <a href="diamond.json" download>Example JSON</a>
+      <a href="README.md">Using the code</a>
+      <a href="https://www.fifatrainingcentre.com/media/native/beach-soccer-session-plans/formations_EN.pdf">Football diamond ↗</a>
+      <a href="https://www.fai.ie/sessions/317/">Width + support ↗</a>
+      <span>← → to change page</span>
+    </footer>
+    <noscript><p>Open the <a href="graphics/01-diamond.svg">SVG graphics</a>, or enable JavaScript for the guide.</p></noscript>
+  </body>
+</html>

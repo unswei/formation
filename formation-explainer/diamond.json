@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "meta": {
+    "name": "Teaching diamond: goalkeeper + 1-2-1",
+    "notes": "Illustrative formation for the visual guide. Roles are fixed by player ID. Tune before use on robots."
+  },
+  "defaults": {
+    "attraction": { "x": 0.65, "y": 0.4 },
+    "minX": -4.2,
+    "maxX": 4.0,
+    "minY": -2.6,
+    "maxY": 2.6
+  },
+  "modes": {
+    "normal_play": {
+      "robots": {
+        "1": {
+          "offset": { "x": -4.05, "y": 0 },
+          "attraction": { "x": 0.05, "y": 0.15 },
+          "minX": -4.2,
+          "maxX": -3.6,
+          "minY": -0.7,
+          "maxY": 0.7
+        },
+        "2": {
+          "offset": { "x": -2.4, "y": 0 },
+          "attraction": { "x": 0.45, "y": 0.3 },
+          "minX": -3.5,
+          "maxX": -0.5,
+          "minY": -1.3,
+          "maxY": 1.3
+        },
+        "3": {
+          "offset": { "x": -0.8, "y": 1.65 },
+          "maxX": 2.7,
+          "minX": -2.5,
+          "minY": 0.25
+        },
+        "4": {
+          "offset": { "x": -0.8, "y": -1.65 },
+          "maxX": 2.7,
+          "minX": -2.5,
+          "maxY": -0.25
+        },
+        "5": {
+          "offset": { "x": 1.0, "y": 0 },
+          "attraction": { "x": 0.85, "y": 0.55 },
+          "minX": -1.5,
+          "maxX": 4.0,
+          "minY": -1.8,
+          "maxY": 1.8
+        }
+      }
+    },
+    "kickoff_us": {
+      "defaults": { "attraction": { "x": 0, "y": 0 } },
+      "robots": {
+        "1": { "offset": { "x": -4.05, "y": 0 } },
+        "2": { "offset": { "x": -2.7, "y": 0 } },
+        "3": { "offset": { "x": -1.4, "y": 1.65 } },
+        "4": { "offset": { "x": -1.4, "y": -1.65 } },
+        "5": { "offset": { "x": -0.3, "y": 0 } }
+      }
+    },
+    "kickoff_them": {
+      "defaults": { "attraction": { "x": 0, "y": 0 } },
+      "robots": {
+        "1": { "offset": { "x": -4.05, "y": 0 } },
+        "2": { "offset": { "x": -3.0, "y": 0 } },
+        "3": { "offset": { "x": -2.0, "y": 1.5 } },
+        "4": { "offset": { "x": -2.0, "y": -1.5 } },
+        "5": { "offset": { "x": -1.0, "y": 0 } }
+      }
+    }
+  }
+}
